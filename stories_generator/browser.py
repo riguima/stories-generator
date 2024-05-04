@@ -1,6 +1,6 @@
+import os
 from pathlib import Path
 from time import sleep
-from uuid import uuid4
 
 import toml
 import undetected_chromedriver as uc
@@ -98,7 +98,7 @@ class Browser:
             'url': self.driver.current_url,
         }
 
-    def generate_images(self, info, stories_image_url, feed_image_url):
+    def generate_images(self, info, background_image_url):
         config = toml.load(open('.config.toml', 'r'))
         self.driver.get(config['MODEL_URL'])
         while True:
@@ -155,22 +155,21 @@ class Browser:
         )
         self.find_element('body').click()
         sleep(5)
-        result = []
         background_element = self.find_element('.fbzKiw')
-        for url in [stories_image_url, feed_image_url]:
-            self.driver.execute_script(
-                f'arguments[0].style.background = "url({url}) center center / contain no-repeat"',
-                background_element,
-            )
-            filename = f'{uuid4()}.png'
-            if url == stories_image_url:
-                background_element.screenshot(str(Path('static') / filename))
-            else:
-                self.find_element('._0xkaeQ').screenshot(
-                    str(Path('static') / filename)
-                )
-            result.append(Path('static') / filename)
-        return result
+        self.driver.execute_script(
+            f'arguments[0].style.background = "url({background_image_url}) center center / contain no-repeat"',
+            background_element,
+        )
+        stories_filename = f'{len(os.listdir(Path("static"))) + 1}.png'
+        background_element.screenshot(str(Path('static') / stories_filename))
+        feed_filename = f'{len(os.listdir(Path("static"))) + 1}.png'
+        self.find_element('._0xkaeQ').screenshot(
+            str(Path('static') / feed_filename)
+        )
+        return (
+            Path('static') / stories_filename,
+            Path('static') / feed_filename,
+        )
 
     def find_element(self, selector, element=None, wait=10):
         return WebDriverWait(element or self.driver, wait).until(

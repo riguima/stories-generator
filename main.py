@@ -1,6 +1,7 @@
 from importlib import import_module
 
 import telebot
+import toml
 from sqlalchemy import select
 from telebot.util import quick_markup
 
@@ -30,6 +31,9 @@ def start(message):
             'Gerar Imagens': {'callback_data': 'generate_images'},
         }
         if message.chat.id in config['ADMINS']:
+            options['Editar Mensagem do Menu'] = {
+                'callback_data': 'edit_menu_message'
+            }
             options['Editar Modelo'] = {'callback_data': 'edit_model'}
             options['Adicionar Plano'] = {'callback_data': 'add_plan'}
             options['Planos'] = {'callback_data': 'show_plans'}
@@ -37,7 +41,7 @@ def start(message):
             options['Membros'] = {'callback_data': 'show_members'}
         bot.send_message(
             message.chat.id,
-            f'👋 Olá, {message.chat.first_name}!\n\n🤖 Seja bem-vindo ao nosso bot!\n\nAo adquirir sua assinatura, insira seu link de afiliado na aba "Gerar" e receba a 📷 imagem de feed/stories e texto personalizado com as informações de cada produto.\n\nPersonalize suas imagens em "Layout".\nA imagem deve ter as dimensões de 1080x1920.\n🎨 Modelo de exemplo: https://www.canva.com/design/DAGEAVUKg38/OsVaNPL9wxq9URHSFi-hdQ/view?\nAtente-se às margens e áreas seguras da imagem (será onde os textos personalizados serão adicionados).',
+            config['MENU_MESSAGE'].format(nome=message.chat.first_name),
             reply_markup=quick_markup(options, row_width=1),
         )
     else:
@@ -45,6 +49,23 @@ def start(message):
             message.chat.id,
             'Adicione um arroba para sua conta do Telegram para utilizar esse bot',
         )
+
+
+@bot.callback_query_handler(func=lambda c: c.data == 'edit_menu_message')
+def edit_menu_message(callback_query):
+    bot.send_message(
+        callback_query.message.chat.id,
+        'Envie a mensagem que vai ficar no menu\n\nTags: {nome}',
+    )
+    bot.register_next_step_handler(callback_query.message, on_menu_message)
+
+
+def on_menu_message(message):
+    global config
+    config['MENU_MESSAGE'] = message.text
+    toml.dump(config, open('.config.toml', 'w'))
+    bot.send_message(message.chat.id, 'Mensagem Editada!')
+    start(message)
 
 
 @bot.callback_query_handler(func=lambda c: c.data == 'return_to_main_menu')

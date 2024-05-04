@@ -15,16 +15,12 @@ class User(Base):
     __tablename__ = 'users'
     id: Mapped[int] = mapped_column(primary_key=True)
     username: Mapped[str]
-    shopee_feed_image: Mapped[Optional[str]]
-    mercado_livre_feed_image: Mapped[Optional[str]]
-    magalu_feed_image: Mapped[Optional[str]]
-    amazon_feed_image: Mapped[Optional[str]]
-    shopee_stories_image: Mapped[Optional[str]]
-    mercado_livre_stories_image: Mapped[Optional[str]]
-    magalu_stories_image: Mapped[Optional[str]]
-    amazon_stories_image: Mapped[Optional[str]]
+    shopee_image: Mapped[Optional[str]]
+    mercado_livre_image: Mapped[Optional[str]]
+    magalu_image: Mapped[Optional[str]]
+    amazon_image: Mapped[Optional[str]]
     text_model: Mapped[Optional[str]] = mapped_column(
-        default='🔥{nome}\n\n{valor_antigo}\n💸{valor_atual}\n💳 {parcelamento}\n\n👉Link p/ comprar: {link}'
+        default='🔥{nome}\n\n{valor_antigo}\n💸{valor}\n💳 {parcelamento}\n\n👉Link p/ comprar: {link}'
     )
     signatures: Mapped[List['Signature']] = relationship(
         back_populates='user', cascade='all,delete-orphan'

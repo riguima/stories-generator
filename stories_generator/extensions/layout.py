@@ -92,7 +92,7 @@ def init_bot(bot, start):
         if message.document:
             image = bot.get_file(message.document.file_id)
             valid_extensions = ['jpeg', 'jpg', 'png']
-            if image.file_path.split('.')[-1] not in valid_extensions:
+            if image.file_path.split('.')[-1].lower() not in valid_extensions:
                 bot.send_message(
                     message.chat.id, 'Image inválida, tente novamente'
                 )

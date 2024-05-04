@@ -2,6 +2,7 @@ import os
 
 import toml
 from sqlalchemy import select
+from selenium.common.exceptions import InvalidArgumentException
 from telebot.util import quick_markup
 
 from stories_generator.browser import Browser
@@ -35,15 +36,9 @@ def init_bot(bot, start):
         bot.send_message(
             callback_query.message.chat.id, 'Digite o link do anúncio'
         )
-        bot.register_next_step_handler(callback_query.message, on_ad_url)
+        bot.register_next_step_handler(callback_query.message, on_affiliate_url)
 
-    def on_ad_url(message):
-        bot.send_message(message.chat.id, 'Digite o link de afiliado')
-        bot.register_next_step_handler(
-            message, lambda m: on_affiliate_url(m, message.text)
-        )
-
-    def on_affiliate_url(message, ad_url):
+    def on_affiliate_url(message):
         with Session() as session:
             query = select(User).where(User.username == message.chat.username)
             user_model = session.scalars(query).first()
@@ -66,6 +61,16 @@ def init_bot(bot, start):
         generating_message = bot.send_message(
             message.chat.id, 'Gerando Imagens...'
         )
+        try:
+            browser.driver.get(message.text)
+        except InvalidArgumentException:
+            bot.send_message(
+                message.chat.id,
+                'URL inválida, digite uma URL de alguns desses sites: Shopee, Mercado Livre, Amazon, Magalu',
+            )
+            bot.delete_message(message.chat.id, generating_message.id)
+            start(message)
+            return
         for website in [
             'mercadolivre',
             'amazon',
@@ -73,14 +78,14 @@ def init_bot(bot, start):
             'magazineluiza',
             'magazinevoce',
         ]:
-            if website in ad_url:
+            if website in browser.driver.current_url:
                 functions = {
                     'mercadolivre': browser.get_mercado_livre_product_info,
                     'amazon': browser.get_amazon_product_info,
                     'magazineluiza': browser.get_magalu_product_info,
                     'magazinevoce': browser.get_magalu_product_info,
                 }
-                info = functions[website](ad_url)
+                info = functions[website](message.text)
                 with Session() as session:
                     query = select(User).where(
                         User.username == message.chat.username

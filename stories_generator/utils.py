@@ -3,8 +3,8 @@ from datetime import datetime
 from pytz import timezone
 from sqlalchemy import select
 
-from telegram_assinaturas_bot.database import Session
-from telegram_assinaturas_bot.models import Plan
+from stories_generator.database import Session
+from stories_generator.models import Plan
 
 
 def get_today_date():

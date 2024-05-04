@@ -4,7 +4,7 @@ from typing import List, Optional
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
-from telegram_assinaturas_bot.database import db
+from stories_generator.database import db
 
 
 class Base(DeclarativeBase):

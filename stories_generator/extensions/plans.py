@@ -1,8 +1,8 @@
 from telebot.util import quick_markup
 
-from telegram_assinaturas_bot.database import Session
-from telegram_assinaturas_bot.models import Plan
-from telegram_assinaturas_bot.utils import get_plans_reply_markup
+from stories_generator.database import Session
+from stories_generator.models import Plan
+from stories_generator.utils import get_plans_reply_markup
 
 
 def init_bot(bot, start):
@@ -21,14 +21,13 @@ def init_bot(bot, start):
 
     def on_plan_value(message, plan_name):
         try:
+            plan_value = float(message.text.replace(',', '.'))
             bot.send_message(
                 message.chat.id, 'Digite a quantidade de dias do plano'
             )
             bot.register_next_step_handler(
                 message,
-                lambda m: on_plan_days(
-                    m, plan_name, float(message.text.replace(',', '.'))
-                ),
+                lambda m: on_plan_days(m, plan_name, plan_value),
             )
         except ValueError:
             bot.send_message(

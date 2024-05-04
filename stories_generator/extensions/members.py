@@ -4,10 +4,9 @@ from datetime import timedelta
 from sqlalchemy import select
 from telebot.util import quick_markup
 
-from telegram_assinaturas_bot.database import Session
-from telegram_assinaturas_bot.models import Plan, Signature, User
-from telegram_assinaturas_bot.utils import (get_plans_reply_markup,
-                                            get_today_date)
+from stories_generator.database import Session
+from stories_generator.models import Plan, Signature, User
+from stories_generator.utils import get_plans_reply_markup, get_today_date
 
 
 def init_bot(bot, start):

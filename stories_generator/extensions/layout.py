@@ -18,7 +18,9 @@ def init_bot(bot, start):
                     'Imagem Feed': {'callback_data': 'feed_image'},
                     'Imagem Stories': {'callback_data': 'stories_image'},
                     'Modelo do texto': {'callback_data': 'text_model'},
-                }
+                    'Voltar': {'callback_data': 'return_to_main_menu'},
+                },
+                row_width=1,
             ),
         )
 
@@ -46,6 +48,7 @@ def init_bot(bot, start):
                     },
                     'Magalu': {'callback_data': f'{action}:magalu'},
                     'Amazon': {'callback_data': f'{action}:amazon'},
+                    'Voltar': {'callback_data': 'return_to_main_menu'},
                 },
                 row_width=1,
             ),
@@ -58,7 +61,7 @@ def init_bot(bot, start):
                 User.username == callback_query.message.chat.username
             )
             user_model = session.scalars(query).first()
-        website = callback_query.data.spli(':')[-1]
+        website = callback_query.data.split(':')[-1]
         feed_images = {
             'shopee': user_model.shopee_feed_image,
             'mercado_livre': user_model.mercado_livre_feed_image,
@@ -77,6 +80,7 @@ def init_bot(bot, start):
                 'Você ainda não fez upload de uma imagem',
             )
         bot.send_message(
+            callback_query.message.chat.id,
             'Envie uma imagem para ficar como modelo',
             reply_markup=quick_markup(
                 {
@@ -89,8 +93,20 @@ def init_bot(bot, start):
         )
 
     def on_feed_image(message, website):
-        if message.photo:
-            image = bot.get_file(message.photo[0].file_id)
+        if message.photo or message.document:
+            if message.photo:
+                image = bot.get_file(message.photo[0].file_id)
+            else:
+                image = bot.get_file(message.document.file_id)
+            valid_extensions = ['jpeg', 'jpg', 'png']
+            if image.file_path.split('.')[-1] not in valid_extensions:
+                bot.send_message(
+                    message.chat.id, 'Image inválida, tente novamente'
+                )
+                bot.register_next_step_handler(
+                    message, lambda m: on_feed_image(m, website)
+                )
+                return
             image_file = bot.download_file(image.file_path)
             image_path = str(
                 Path('static')
@@ -111,9 +127,13 @@ def init_bot(bot, start):
                     user_model.magalu_feed_image = image_path
                 elif website == 'amazon':
                     user_model.amazon_feed_image = image_path
+                session.commit()
             bot.send_message(message.chat.id, 'Imagem Adicionada!')
             start(message)
         else:
+            bot.send_message(
+                message.chat.id, 'Image inválida, tente novamente'
+            )
             bot.register_next_step_handler(
                 message, lambda m: on_feed_image(m, website)
             )
@@ -127,7 +147,7 @@ def init_bot(bot, start):
                 User.username == callback_query.message.chat.username
             )
             user_model = session.scalars(query).first()
-        website = callback_query.data.spli(':')[-1]
+        website = callback_query.data.split(':')[-1]
         stories_images = {
             'shopee': user_model.shopee_stories_image,
             'mercado_livre': user_model.mercado_livre_stories_image,
@@ -146,6 +166,7 @@ def init_bot(bot, start):
                 'Você ainda não fez upload de uma imagem',
             )
         bot.send_message(
+            callback_query.message.chat.id,
             'Envie uma imagem para ficar como modelo',
             reply_markup=quick_markup(
                 {
@@ -158,8 +179,20 @@ def init_bot(bot, start):
         )
 
     def on_stories_image(message, website):
-        if message.photo:
-            image = bot.get_file(message.photo[0].file_id)
+        if message.photo or message.document:
+            if message.photo:
+                image = bot.get_file(message.photo[0].file_id)
+            else:
+                image = bot.get_file(message.document.file_id)
+            valid_extensions = ['jpeg', 'jpg', 'png']
+            if image.file_path.split('.')[-1] not in valid_extensions:
+                bot.send_message(
+                    message.chat.id, 'Image inválida, tente novamente'
+                )
+                bot.register_next_step_handler(
+                    message, lambda m: on_feed_image(m, website)
+                )
+                return
             image_file = bot.download_file(image.file_path)
             image_path = str(
                 Path('static')
@@ -180,9 +213,13 @@ def init_bot(bot, start):
                     user_model.magalu_stories_image = image_path
                 elif website == 'amazon':
                     user_model.amazon_stories_image = image_path
+                session.commit()
             bot.send_message(message.chat.id, 'Imagem Adicionada!')
             start(message)
         else:
+            bot.send_message(
+                message.chat.id, 'Image inválida, tente novamente'
+            )
             bot.register_next_step_handler(
                 message, lambda m: on_stories_image(m, website)
             )

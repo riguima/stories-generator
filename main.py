@@ -27,9 +27,10 @@ def start(message):
                 'callback_data': f'show_signature:{message.chat.username}'
             },
             'Layout': {'callback_data': 'show_layout'},
-            'Gerar Imagem': {'callback_data': 'generate_image'},
+            'Gerar Imagens': {'callback_data': 'generate_images'},
         }
         if message.chat.id in config['ADMINS']:
+            options['Editar Modelo'] = {'callback_data': 'edit_model'}
             options['Adicionar Plano'] = {'callback_data': 'add_plan'}
             options['Planos'] = {'callback_data': 'show_plans'}
             options['Adicionar Membro'] = {'callback_data': 'add_member'}

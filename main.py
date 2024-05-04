@@ -3,7 +3,7 @@ from importlib import import_module
 import telebot
 import toml
 from sqlalchemy import select
-from telebot.util import quick_markup
+from telebot.util import quick_markup, update_types
 
 from stories_generator.config import config
 from stories_generator.database import Session
@@ -81,4 +81,4 @@ def load_extensions():
 
 if __name__ == '__main__':
     load_extensions()
-    bot.infinity_polling()
+    bot.infinity_polling(allowed_updates=update_types)

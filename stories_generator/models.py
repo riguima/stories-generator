@@ -22,12 +22,24 @@ class User(Base):
     text_model: Mapped[Optional[str]] = mapped_column(
         default='🔥{nome}\n\n{valor_antigo}\n💸{valor}\n💳 {parcelamento}\n\n👉Link p/ comprar: {link}'
     )
+    chats: Mapped[List['Chat']] = relationship(
+        back_populates='user', cascade='all,delete-orphan'
+    )
     signatures: Mapped[List['Signature']] = relationship(
         back_populates='user', cascade='all,delete-orphan'
     )
     payments: Mapped[List['Payment']] = relationship(
         back_populates='user', cascade='all,delete-orphan'
     )
+
+
+class Chat(Base):
+    __tablename__ = 'chats'
+    id: Mapped[int] = mapped_column(primary_key=True)
+    chat_id: Mapped[str]
+    title: Mapped[str]
+    user: Mapped['User'] = relationship(back_populates='chats')
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
 
 
 class Signature(Base):

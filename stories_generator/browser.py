@@ -164,7 +164,6 @@ class Browser:
             f'arguments[0].style.background = "url(data:image/png;base64,{encoded_image.decode()}) center center / contain no-repeat"',
             background_element,
         )
-        os.remove(background_image_path)
         stories_filename = f'{len(os.listdir(Path("static"))) + 1}.png'
         background_element.screenshot(str(Path('static') / stories_filename))
         feed_filename = f'{len(os.listdir(Path("static"))) + 1}.png'

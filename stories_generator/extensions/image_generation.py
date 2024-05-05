@@ -11,8 +11,6 @@ from stories_generator.database import Session
 from stories_generator.models import Chat, Signature, User
 from stories_generator.utils import get_today_date
 
-browser = Browser(headless=False)
-
 feed_messages = {}
 
 
@@ -61,6 +59,7 @@ def init_bot(bot, start):
         generating_message = bot.send_message(
             message.chat.id, 'Gerando Imagens...'
         )
+        browser = Browser(headless=False)
         try:
             browser.driver.get(message.text)
         except InvalidArgumentException:

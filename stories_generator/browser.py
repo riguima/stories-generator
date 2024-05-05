@@ -15,6 +15,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 class Browser:
     def __init__(self, headless=True):
         self.driver = uc.Chrome(headless=headless, use_subprocess=False)
+        self.driver.maximize_window()
 
     def get_amazon_product_info(self, url):
         self.driver.get(url)

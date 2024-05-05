@@ -1,4 +1,5 @@
 import os
+import base64
 from pathlib import Path
 from time import sleep
 
@@ -98,7 +99,7 @@ class Browser:
             'url': self.driver.current_url,
         }
 
-    def generate_images(self, info, background_image_url):
+    def generate_images(self, info, background_image_path):
         config = toml.load(open('.config.toml', 'r'))
         self.driver.get(config['MODEL_URL'])
         while True:
@@ -156,10 +157,13 @@ class Browser:
         self.find_element('body').click()
         sleep(5)
         background_element = self.find_element('.fbzKiw')
+        with open(background_image_path, 'rb') as f:
+            encoded_image = base64.b64encode(f.read())
         self.driver.execute_script(
-            f'arguments[0].style.background = "url({background_image_url}) center center / contain no-repeat"',
+            f'arguments[0].style.background = "url(data:image/png;base64,{encoded_image.decode()}) center center / contain no-repeat"',
             background_element,
         )
+        os.remove(background_image_path)
         stories_filename = f'{len(os.listdir(Path("static"))) + 1}.png'
         background_element.screenshot(str(Path('static') / stories_filename))
         feed_filename = f'{len(os.listdir(Path("static"))) + 1}.png'

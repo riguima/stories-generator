@@ -115,10 +115,7 @@ def init_bot(bot, start):
                             message.chat.id, generating_message.id
                         )
                         return
-                story_image_path, feed_image_path = browser.generate_images(
-                    info,
-                    config['DOMAIN'] + image_path,
-                )
+                story_image_path, feed_image_path = browser.generate_images(info, image_path)
                 bot.delete_message(message.chat.id, generating_message.id)
                 bot.send_photo(
                     message.chat.id,

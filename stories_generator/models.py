@@ -16,9 +16,15 @@ class User(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     username: Mapped[str]
     shopee_image: Mapped[Optional[str]]
-    mercado_livre_image: Mapped[Optional[str]] = mapped_column(default='static/background.png')
-    magalu_image: Mapped[Optional[str]] = mapped_column(default='static/background.png')
-    amazon_image: Mapped[Optional[str]] = mapped_column(default='static/background.png')
+    mercado_livre_image: Mapped[Optional[str]] = mapped_column(
+        default='static/background.png'
+    )
+    magalu_image: Mapped[Optional[str]] = mapped_column(
+        default='static/background.png'
+    )
+    amazon_image: Mapped[Optional[str]] = mapped_column(
+        default='static/background.png'
+    )
     text_model: Mapped[Optional[str]] = mapped_column(
         default='🔥{nome}\n\n{valor_antigo}\n💸{valor}\n💳 {parcelamento}\n\n👉Link p/ comprar: {link}'
     )

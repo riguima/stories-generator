@@ -1,12 +1,11 @@
-import os
 import base64
+import os
 from pathlib import Path
 from time import sleep
 
 import toml
 import undetected_chromedriver as uc
-from selenium.common.exceptions import (StaleElementReferenceException,
-                                        TimeoutException)
+from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
@@ -21,9 +20,9 @@ class Browser:
         self.driver.get(url)
         sleep(1)
         self.driver.refresh()
-        try:
+        if self.driver.find_elements(By.CSS_SELECTOR, '.best-offer-name'):
             installment = self.find_element('.best-offer-name').text
-        except TimeoutException:
+        else:
             installment = ''
         return {
             'name': self.find_element('#productTitle').text,
@@ -48,9 +47,9 @@ class Browser:
     def get_mercado_livre_product_info(self, url):
         self.driver.get(url)
         self.driver.refresh()
-        try:
-            name = self.find_element('.ui-pdp-title').text,
-        except TimeoutException:
+        if self.driver.find_elements(By.CSS_SELECTOR, '.ui-pdp-title'):
+            name = (self.find_element('.ui-pdp-title').text,)
+        else:
             self.find_element('.poly-component__title').click()
             name = self.find_element('.ui-pdp-title').text
         return {
@@ -76,11 +75,13 @@ class Browser:
 
     def get_magalu_product_info(self, url):
         self.driver.get(url)
-        try:
+        if self.driver.find_elements(
+            By.CSS_SELECTOR, 'p[data-testid="installment"]'
+        ):
             installment = self.find_element(
                 'p[data-testid="installment"]'
             ).text
-        except TimeoutException:
+        else:
             installment = ''
         return {
             'name': self.find_element(

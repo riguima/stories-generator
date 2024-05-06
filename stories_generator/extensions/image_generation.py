@@ -1,8 +1,8 @@
 import os
 
 import toml
-from sqlalchemy import select
 from selenium.common.exceptions import InvalidArgumentException
+from sqlalchemy import select
 from telebot.util import quick_markup
 
 from stories_generator.browser import Browser
@@ -34,7 +34,9 @@ def init_bot(bot, start):
         bot.send_message(
             callback_query.message.chat.id, 'Digite o link do anúncio'
         )
-        bot.register_next_step_handler(callback_query.message, on_affiliate_url)
+        bot.register_next_step_handler(
+            callback_query.message, on_affiliate_url
+        )
 
     def on_affiliate_url(message):
         with Session() as session:
@@ -114,7 +116,9 @@ def init_bot(bot, start):
                             message.chat.id, generating_message.id
                         )
                         return
-                story_image_path, feed_image_path = browser.generate_images(info, image_path)
+                story_image_path, feed_image_path = browser.generate_images(
+                    info, image_path
+                )
                 bot.delete_message(message.chat.id, generating_message.id)
                 bot.send_photo(
                     message.chat.id,

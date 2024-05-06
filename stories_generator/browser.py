@@ -48,8 +48,13 @@ class Browser:
     def get_mercado_livre_product_info(self, url):
         self.driver.get(url)
         self.driver.refresh()
+        try:
+            name = self.find_element('.ui-pdp-title').text,
+        except TimeoutException:
+            self.find_element('.poly-component__title').click()
+            name = self.find_element('.ui-pdp-title').text,
         return {
-            'name': self.find_element('.ui-pdp-title').text,
+            'name': name,
             'old_value': float(
                 self.find_element('.andes-money-amount__fraction')
                 .text.replace('.', '')

@@ -52,6 +52,10 @@ class Browser:
         else:
             self.driver.execute_script('arguments[0].click()', self.find_element('.poly-component__title'))
             name = self.find_element('.ui-pdp-title').text
+        if self.driver.find_elements(By.CSS_SELECTOR, '.ui-pdp-price__subtitles'):
+            installment = self.find_element('.ui-pdp-price__subtitles').text.replace('\n', ' ').replace(' , ', ',')
+        else:
+            installment = ''
         return {
             'name': name,
             'old_value': float(
@@ -64,9 +68,7 @@ class Browser:
                 .text.replace('.', '')
                 .replace(',', '.')
             ),
-            'installment': self.find_element('.ui-pdp-price__subtitles')
-            .text.replace('\n', ' ')
-            .replace(' , ', ','),
+            'installment': installment,
             'image_url': self.find_element(
                 '.ui-pdp-image.ui-pdp-gallery__figure__image'
             ).get_attribute('src'),

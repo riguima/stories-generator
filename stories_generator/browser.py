@@ -1,10 +1,13 @@
 import base64
 import os
+import re
 from pathlib import Path
 from time import sleep
 
 import toml
 import undetected_chromedriver as uc
+from httpx import get
+from parsel import Selector
 from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
@@ -17,62 +20,73 @@ class Browser:
         self.driver.maximize_window()
 
     def get_amazon_product_info(self, url):
-        self.driver.get(url)
-        sleep(1)
-        self.driver.refresh()
-        if self.driver.find_elements(By.CSS_SELECTOR, '.best-offer-name'):
-            installment = self.find_element('.best-offer-name').text
-        else:
-            installment = ''
+        response = get(url)
+        selector = Selector(response.text)
         return {
-            'name': self.find_element('#productTitle').text,
+            'name': selector.css('#productTitle::text').get().strip(),
             'old_value': float(
-                self.find_element('.a-size-small .a-offscreen')
-                .get_attribute('textContent')[2:]
+                selector.css('.a-size-small .a-offscreen::text')
+                .get()[2:]
                 .replace('.', '')
                 .replace(',', '.')
             ),
             'value': float(
-                self.find_element('.a-price-whole')
-                .text.replace('.', '')
+                selector.css('.a-price-whole::text')
+                .get()
+                .replace('.', '')
                 .replace(',', '.')
             ),
-            'installment': installment,
-            'image_url': self.find_element('#landingImage').get_attribute(
-                'src'
-            ),
-            'url': self.driver.current_url,
+            'installment': selector.css('.best-offer-name::text').get() or '',
+            'image_url': selector.css('#landingImage').attrib['src'],
+            'url': url,
         }
 
     def get_mercado_livre_product_info(self, url):
-        self.driver.get(url)
-        self.driver.refresh()
-        if self.driver.find_elements(By.CSS_SELECTOR, '.ui-pdp-title'):
-            name = (self.find_element('.ui-pdp-title').text,)
-        else:
-            self.driver.execute_script('arguments[0].click()', self.find_element('.poly-component__title'))
-            name = self.find_element('.ui-pdp-title').text
-        if self.driver.find_elements(By.CSS_SELECTOR, '.ui-pdp-price__subtitles'):
-            installment = self.find_element('.ui-pdp-price__subtitles').text.replace('\n', ' ').replace(' , ', ',')
+        response = get(url)
+        selector = Selector(response.text)
+        if not selector.css('.ui-pdp-title::text'):
+            ad_url = selector.css('.poly-component__title').attrib['href']
+            response = get(ad_url)
+            selector = Selector(response.text)
+        installment_selector = selector.css('#pricing_price_subtitle')
+        if installment_selector:
+            installment = ''
+            for span in installment_selector.css('span::text'):
+                installment += f'{span.get()} '
+            installment = installment.replace(' , ', ',')
+            installment = re.sub(
+                'em ',
+                'em ' + re.findall(r'\s(\d{2}+x)', response.text)[0] + ' ',
+                installment,
+            )
+            if 'sem juros' in response.text:
+                installment += 'sem juros'
         else:
             installment = ''
+        old_value = float(
+            selector.css('.andes-money-amount__fraction::text')
+            .get()
+            .replace('.', '')
+            .replace(',', '.')
+        )
+        value = float(
+            selector.css('.andes-money-amount__fraction::text')[1]
+            .get()
+            .replace('.', '')
+            .replace(',', '.')
+        )
+        if old_value > value:
+            value = old_value
+            old_value = ''
         return {
-            'name': name,
-            'old_value': float(
-                self.find_element('.andes-money-amount__fraction')
-                .text.replace('.', '')
-                .replace(',', '.')
-            ),
-            'value': float(
-                self.find_elements('.andes-money-amount__fraction')[1]
-                .text.replace('.', '')
-                .replace(',', '.')
-            ),
+            'name': selector.css('.ui-pdp-title::text').get(),
+            'old_value': old_value,
+            'value': value,
             'installment': installment,
-            'image_url': self.find_element(
+            'image_url': selector.css(
                 '.ui-pdp-image.ui-pdp-gallery__figure__image'
-            ).get_attribute('src'),
-            'url': self.driver.current_url,
+            ).attrib['src'],
+            'url': url,
         }
 
     def get_magalu_product_info(self, url):

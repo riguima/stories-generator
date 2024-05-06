@@ -50,7 +50,7 @@ class Browser:
         if self.driver.find_elements(By.CSS_SELECTOR, '.ui-pdp-title'):
             name = (self.find_element('.ui-pdp-title').text,)
         else:
-            self.find_element('.poly-component__title').click()
+            self.driver.execute_script('arguments[0].click()', self.find_element('.poly-component__title'))
             name = self.find_element('.ui-pdp-title').text
         return {
             'name': name,

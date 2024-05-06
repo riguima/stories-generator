@@ -174,6 +174,7 @@ class Browser:
         )
         stories_filename = f'{len(os.listdir(Path("static"))) + 1}.png'
         background_element.screenshot(str(Path('static') / stories_filename))
+        sleep(1)
         feed_filename = f'{len(os.listdir(Path("static"))) + 1}.png'
         self.find_element('._0xkaeQ').screenshot(
             str(Path('static') / feed_filename)

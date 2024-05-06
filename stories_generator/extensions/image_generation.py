@@ -1,6 +1,7 @@
 import os
 
 import toml
+from httpx import get
 from selenium.common.exceptions import InvalidArgumentException
 from sqlalchemy import select
 from telebot.util import quick_markup
@@ -62,9 +63,8 @@ def init_bot(bot, start):
             message.chat.id, 'Gerando Imagens...'
         )
         browser = Browser(headless=False)
-        try:
-            browser.driver.get(message.text)
-        except InvalidArgumentException:
+        response = get(message.text, follow_redirects=True)
+        if response.status != 200:
             bot.send_message(
                 message.chat.id,
                 'URL inválida, digite uma URL de alguns desses sites: Shopee, Mercado Livre, Amazon, Magalu',
@@ -79,7 +79,7 @@ def init_bot(bot, start):
             'magazineluiza',
             'magazinevoce',
         ]:
-            if website in browser.driver.current_url:
+            if website in response.url:
                 functions = {
                     'mercadolivre': browser.get_mercado_livre_product_info,
                     'amazon': browser.get_amazon_product_info,

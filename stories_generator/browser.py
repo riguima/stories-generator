@@ -20,7 +20,7 @@ class Browser:
         self.driver.maximize_window()
 
     def get_amazon_product_info(self, url):
-        response = get(url)
+        response = get(url, headers={'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:15.0) Gecko/20100101 Firefox/15.0.1'})
         selector = Selector(response.text)
         return {
             'name': selector.css('#productTitle::text').get().strip(),
@@ -42,7 +42,7 @@ class Browser:
         }
 
     def get_mercado_livre_product_info(self, url):
-        response = get(url)
+        response = get(url, headers={'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:15.0) Gecko/20100101 Firefox/15.0.1'})
         selector = Selector(response.text)
         if not selector.css('.ui-pdp-title::text'):
             ad_url = selector.css('.poly-component__title').attrib['href']

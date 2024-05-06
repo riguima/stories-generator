@@ -52,7 +52,7 @@ class Browser:
             name = self.find_element('.ui-pdp-title').text,
         except TimeoutException:
             self.find_element('.poly-component__title').click()
-            name = self.find_element('.ui-pdp-title').text,
+            name = self.find_element('.ui-pdp-title').text
         return {
             'name': name,
             'old_value': float(

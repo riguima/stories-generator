@@ -140,8 +140,8 @@ class Browser:
             (stories_image.width // 2 - product_image.width // 2, 400),
         )
         bold_font = ImageFont.truetype(str(Path('fonts') / 'arial-bold.ttf'), 70)
-        font = ImageFont.truetype(str(Path('fonts') / 'arial.ttf'), 50)
-        small_font = ImageFont.truetype(str(Path('fonts') / 'arial.ttf'), 40)
+        font = ImageFont.truetype(str(Path('fonts') / 'arial.ttf'), 60)
+        small_font = ImageFont.truetype(str(Path('fonts') / 'arial.ttf'), 50)
         draw = ImageDraw.Draw(stories_image)
         name = (
             info['name']
@@ -176,13 +176,13 @@ class Browser:
         draw.line((80, name_coords[1] + 170 + height // 2, 80 + width, name_coords[1] + 170 + height // 2), fill=(100, 100, 100), width=2)
         value = f'R$ {info["value"]:.2f}'.replace('.', ',')
         draw.text(
-            (90, rectangle_coords[1] + 20),
+            (80, rectangle_coords[1] + 20),
             value,
             font=bold_font,
             fill=(0, 0, 0),
         )
         draw.text(
-            (90, rectangle_coords[1] + 90),
+            (80, rectangle_coords[1] + 90),
             info['installment'],
             font=small_font,
             fill=(0, 0, 0),

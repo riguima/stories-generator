@@ -157,8 +157,9 @@ class Browser:
             product_image,
             (stories_image.width // 2 - product_image.width // 2, 400),
         )
-        font = ImageFont.truetype(str(Path('fonts') / 'verdana-bold.ttf'), 40)
-        small_font = ImageFont.truetype(str(Path('fonts') / 'verdana.ttf'), 30)
+        bold_font = ImageFont.truetype(str(Path('fonts') / 'arial-bold.ttf'), 60)
+        font = ImageFont.truetype(str(Path('fonts') / 'arial.ttf'), 50)
+        small_font = ImageFont.truetype(str(Path('fonts') / 'arial.ttf'), 40)
         draw = ImageDraw.Draw(stories_image)
         name = (
             info['name']
@@ -177,29 +178,32 @@ class Browser:
             1000,
             name_coords[1] + 370,
         )
-        draw.rectangle(rectangle_coords, fill=(236, 51, 126))
+        draw.rectangle(rectangle_coords, fill=(255, 255, 255, 255))
         try:
             old_value = f'R$ {info["old_value"]:.2f}'.replace('.', ',')
         except ValueError:
             old_value = ''
         draw.text(
-            (80, name_coords[1] + 150),
+            (80, name_coords[1] + 170),
             old_value,
             font=small_font,
-            fill=(0, 0, 0),
+            fill=(100, 100, 100),
         )
+        width = draw.textlength(old_value, font=font) - 30
+        height = 50
+        draw.line((80, name_coords[1] + 170 + height // 2, 80 + width, name_coords[1] + 170 + height // 2), fill=(100, 100, 100), width=2)
         value = f'R$ {info["value"]:.2f}'.replace('.', ',')
         draw.text(
             (90, rectangle_coords[1] + 20),
             value,
-            font=font,
-            fill=(255, 255, 255),
+            font=bold_font,
+            fill=(0, 0, 0),
         )
         draw.text(
             (90, rectangle_coords[1] + 90),
             info['installment'],
             font=small_font,
-            fill=(255, 255, 255),
+            fill=(0, 0, 0),
         )
         stories_filename = str(Path('static') / f'{uuid4()}.png')
         stories_image.save(stories_filename)

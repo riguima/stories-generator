@@ -128,17 +128,20 @@ def init_bot(bot, start):
             old_value = f'R$ {info["old_value"]:.2f}'.replace('.', ',')
         except ValueError:
             old_value = ''
+        caption = user_model.text_model.format(
+            nome=info['name'],
+            valor_antigo=old_value,
+            valor=f'R$ {info["value"]:.2f}'.replace('.', ','),
+            parcelamento=info['installment'],
+            link=message.text,
+        )
+        if not info['installment']:
+            caption = caption.replace('\n💳', '')
         feed_messages[message.chat.username] = [
             bot.send_photo(
                 message.chat.id,
                 open(feed_image_path, 'rb'),
-                caption=user_model.text_model.format(
-                    nome=info['name'],
-                    valor_antigo=old_value,
-                    valor=f'R$ {info["value"]:.2f}'.replace('.', ','),
-                    parcelamento=info['installment'],
-                    link=message.text,
-                ),
+                caption=caption,
             ),
             feed_image_path,
         ]

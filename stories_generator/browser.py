@@ -3,7 +3,6 @@ import re
 import textwrap
 from pathlib import Path
 from uuid import uuid4
-from time import sleep
 
 import undetected_chromedriver as uc
 from httpx import get
@@ -56,36 +55,14 @@ class Browser:
         )
         selector = Selector(response.text)
         if not selector.css('.ui-pdp-title::text'):
-            ad_url = selector.css('.poly-component__title').attrib['href']
-        else:
-            ad_url = url
-        for _ in range(5):
             response = get(
-                ad_url,
+                selector.css('.poly-component__title').attrib['href'],
                 headers={
                     'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:15.0) Gecko/20100101 Firefox/15.0.1'
                 },
                 follow_redirects=True,
             )
             selector = Selector(response.text)
-            installment_selector = selector.css('#pricing_price_subtitle')
-            if installment_selector:
-                break
-            sleep(1)
-        if installment_selector:
-            installment = ''
-            for span in installment_selector.css('span::text'):
-                installment += f'{span.get()} '
-            installment = installment.replace(' , ', ',')
-            installment = re.sub(
-                'em ',
-                'em ' + re.findall(r'\s(\d{2}+x)', response.text)[0] + ' ',
-                installment,
-            )
-            if 'sem juros' in response.text:
-                installment += 'sem juros'
-        else:
-            installment = ''
         old_value = float(
             selector.css('.andes-money-amount__fraction::text')
             .get()
@@ -101,6 +78,11 @@ class Browser:
         if old_value < value:
             value = old_value
             old_value = ''
+        try:
+            installment = [int(v) for v in re.findall(r'>(\d{2})<', response.text) if int(v) <= 12][0]
+            installment = f'em {installment}x R$ {round(value / installment, 2):.2f} sem juros'.replace('.', ',')
+        except IndexError:
+            installment = ''
         return {
             'name': selector.css('.ui-pdp-title::text').get(),
             'old_value': old_value,
@@ -157,7 +139,7 @@ class Browser:
             product_image,
             (stories_image.width // 2 - product_image.width // 2, 400),
         )
-        bold_font = ImageFont.truetype(str(Path('fonts') / 'arial-bold.ttf'), 60)
+        bold_font = ImageFont.truetype(str(Path('fonts') / 'arial-bold.ttf'), 70)
         font = ImageFont.truetype(str(Path('fonts') / 'arial.ttf'), 50)
         small_font = ImageFont.truetype(str(Path('fonts') / 'arial.ttf'), 40)
         draw = ImageDraw.Draw(stories_image)

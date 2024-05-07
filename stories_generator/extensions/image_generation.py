@@ -2,15 +2,15 @@ import os
 
 import toml
 from httpx import get
-from selenium.common.exceptions import InvalidArgumentException
 from sqlalchemy import select
 from telebot.util import quick_markup
 
 from stories_generator.browser import Browser
-from stories_generator.config import config
 from stories_generator.database import Session
 from stories_generator.models import Chat, Signature, User
 from stories_generator.utils import get_today_date
+
+browser = Browser()
 
 feed_messages = {}
 
@@ -62,9 +62,22 @@ def init_bot(bot, start):
         generating_message = bot.send_message(
             message.chat.id, 'Gerando Imagens...'
         )
-        browser = Browser(headless=False)
         response = get(message.text, follow_redirects=True)
-        if response.status != 200:
+        websites = [
+            'mercadolivre',
+            'amazon',
+            'shopee',
+            'magazineluiza',
+            'magazinevoce',
+        ]
+        url = None
+        website = None
+        for w in websites:
+            if w in str(response.url):
+                website = w
+                url = str(response.url)
+                break
+        if response.status_code != 200 or url is None or website is None:
             bot.send_message(
                 message.chat.id,
                 'URL inválida, digite uma URL de alguns desses sites: Shopee, Mercado Livre, Amazon, Magalu',
@@ -72,95 +85,76 @@ def init_bot(bot, start):
             bot.delete_message(message.chat.id, generating_message.id)
             start(message)
             return
-        for website in [
-            'mercadolivre',
-            'amazon',
-            'shopee',
-            'magazineluiza',
-            'magazinevoce',
-        ]:
-            if website in response.url:
-                functions = {
-                    'mercadolivre': browser.get_mercado_livre_product_info,
-                    'amazon': browser.get_amazon_product_info,
-                    'magazineluiza': browser.get_magalu_product_info,
-                    'magazinevoce': browser.get_magalu_product_info,
-                }
-                info = functions[website](message.text)
-                with Session() as session:
-                    query = select(User).where(
-                        User.username == message.chat.username
-                    )
-                    user_model = session.scalars(query).first()
-                    images_paths = {
-                        'mercadolivre': user_model.mercado_livre_image,
-                        'amazon': user_model.amazon_image,
-                        'magazineluiza': user_model.magalu_image,
-                        'magazinevoce': user_model.magalu_image,
-                    }
-                    image_path = images_paths[website]
-                    if image_path is None:
-                        bot.send_message(
-                            message.chat.id,
-                            'Você não fez upload de uma imagem, faça upload da imagem em "Layout"',
-                            reply_markup=quick_markup(
-                                {
-                                    'Voltar': {
-                                        'callback_data': 'return_to_main_menu'
-                                    },
-                                },
-                                row_width=1,
-                            ),
-                        )
-                        bot.delete_message(
-                            message.chat.id, generating_message.id
-                        )
-                        return
-                story_image_path, feed_image_path = browser.generate_images(
-                    info, image_path
-                )
-                bot.delete_message(message.chat.id, generating_message.id)
-                bot.send_photo(
-                    message.chat.id,
-                    open(story_image_path, 'rb'),
-                    caption=f'Story gerado ✨🖼️✨\nLink: {message.text}',
-                )
-                feed_messages[message.chat.username] = [
-                    bot.send_photo(
-                        message.chat.id,
-                        open(feed_image_path, 'rb'),
-                        caption=user_model.text_model.format(
-                            nome=info['name'],
-                            valor_antigo=info['old_value'],
-                            valor=info['value'],
-                            parcelamento=info['installment'],
-                            link=message.text,
-                        ),
-                    ),
-                    feed_image_path,
-                ]
+        functions = {
+            'mercadolivre': browser.get_mercado_livre_product_info,
+            'amazon': browser.get_amazon_product_info,
+            'magazineluiza': browser.get_magalu_product_info,
+            'magazinevoce': browser.get_magalu_product_info,
+        }
+        info = functions[website](message.text)
+        with Session() as session:
+            query = select(User).where(User.username == message.chat.username)
+            user_model = session.scalars(query).first()
+            images_paths = {
+                'mercadolivre': user_model.mercado_livre_image,
+                'amazon': user_model.amazon_image,
+                'magazineluiza': user_model.magalu_image,
+                'magazinevoce': user_model.magalu_image,
+            }
+            image_path = images_paths[website]
+            if image_path is None:
                 bot.send_message(
                     message.chat.id,
-                    'Escolha uma opção',
+                    'Você não fez upload de uma imagem, faça upload da imagem em "Layout"',
                     reply_markup=quick_markup(
                         {
-                            'Editar': {
-                                'callback_data': 'edit_feed_message_caption'
-                            },
-                            'Enviar': {'callback_data': 'send_feed'},
                             'Voltar': {'callback_data': 'return_to_main_menu'},
                         },
                         row_width=1,
                     ),
                 )
-                os.remove(story_image_path)
+                bot.delete_message(message.chat.id, generating_message.id)
                 return
-        bot.send_message(
-            message.chat.id,
-            'URL inválida, digite uma URL de alguns desses sites: Shopee, Mercado Livre, Amazon, Magalu',
+        story_image_path, feed_image_path = browser.generate_images(
+            info, image_path
         )
         bot.delete_message(message.chat.id, generating_message.id)
-        start(message)
+        bot.send_photo(
+            message.chat.id,
+            open(story_image_path, 'rb'),
+            caption=f'Story gerado ✨🖼️✨\nLink: {message.text}',
+        )
+        try:
+            old_value = f'R$ {info["old_value"]:.2f}'.replace('.', ',')
+        except ValueError:
+            old_value = ''
+        feed_messages[message.chat.username] = [
+            bot.send_photo(
+                message.chat.id,
+                open(feed_image_path, 'rb'),
+                caption=user_model.text_model.format(
+                    nome=info['name'],
+                    valor_antigo=old_value,
+                    valor=f'R$ {info["value"]:.2f}'.replace('.', ','),
+                    parcelamento=info['installment'],
+                    link=message.text,
+                ),
+            ),
+            feed_image_path,
+        ]
+        bot.send_message(
+            message.chat.id,
+            'Escolha uma opção',
+            reply_markup=quick_markup(
+                {
+                    'Editar': {'callback_data': 'edit_feed_message_caption'},
+                    #'Enviar': {'callback_data': 'send_feed'},
+                    'Voltar': {'callback_data': 'return_to_main_menu'},
+                },
+                row_width=1,
+            ),
+        )
+        os.remove(story_image_path)
 
     @bot.callback_query_handler(
         func=lambda c: c.data == 'edit_feed_message_caption'
@@ -185,9 +179,9 @@ def init_bot(bot, start):
                     'Editar': {
                         'callback_data': 'edit_feed_message_caption',
                     },
-                    'Enviar': {
-                        'callback_data': 'send_feed',
-                    },
+                    #'Enviar': {
+                    #    'callback_data': 'send_feed',
+                    #},
                     'Voltar': {
                         'callback_data': 'delete_message_and_return',
                     },

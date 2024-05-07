@@ -34,7 +34,6 @@ def start(message):
             options['Editar Mensagem do Menu'] = {
                 'callback_data': 'edit_menu_message'
             }
-            options['Editar Modelo'] = {'callback_data': 'edit_model'}
             options['Adicionar Plano'] = {'callback_data': 'add_plan'}
             options['Planos'] = {'callback_data': 'show_plans'}
             options['Adicionar Membro'] = {'callback_data': 'add_member'}

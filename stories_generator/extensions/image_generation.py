@@ -7,7 +7,7 @@ from telebot.util import quick_markup
 
 from stories_generator.browser import Browser
 from stories_generator.database import Session
-from stories_generator.models import Chat, Signature, User
+from stories_generator.models import Chat, Signature, User, Product
 from stories_generator.utils import get_today_date
 
 browser = Browser()
@@ -157,6 +157,18 @@ def init_bot(bot, start):
                 row_width=1,
             ),
         )
+        with Session() as session:
+            product = Product(
+                username=message.chat.username,
+                name=info['name'],
+                formatted_old_value=old_value,
+                formatted_value=f'R$ {info["value"]:.2f}'.replace('.', ','),
+                installment=info['installment'],
+                image_url=info['image_url'],
+                url=message.text,
+            )
+            session.add(product)
+            session.commit()
         os.remove(story_image_path)
 
     @bot.callback_query_handler(

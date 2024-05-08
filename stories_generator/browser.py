@@ -145,8 +145,8 @@ class Browser:
         draw = ImageDraw.Draw(stories_image)
         name = (
             info['name']
-            if len(info['name']) < 100
-            else info['name'][:90] + '...'
+            if len(info['name']) < 80
+            else info['name'][:70] + '...'
         )
         lines = textwrap.wrap(name, width=30)
         result_name = ''

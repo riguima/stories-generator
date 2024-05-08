@@ -3,12 +3,28 @@ from typing import List, Optional
 
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from stories_generator.utils import get_today_date
 
 from stories_generator.database import db
 
 
 class Base(DeclarativeBase):
     pass
+
+
+class Product(Base):
+    __tablename__ = 'products'
+    id: Mapped[int] = mapped_column(primary_key=True)
+    username: Mapped[str]
+    create_date: Mapped[Optional[date]] = mapped_column(
+        default=get_today_date()
+    )
+    name: Mapped[str]
+    formatted_old_value: Mapped[Optional[str]]
+    formatted_value: Mapped[str]
+    installment: Mapped[Optional[str]]
+    image_url: Mapped[str]
+    url: Mapped[str]
 
 
 class User(Base):

@@ -139,7 +139,7 @@ class Browser:
             product_image,
             (stories_image.width // 2 - product_image.width // 2, 400),
         )
-        bold_font = ImageFont.truetype(str(Path('fonts') / 'arial-bold.ttf'), 70)
+        bold_font = ImageFont.truetype(str(Path('fonts') / 'arial-bold.ttf'), 100)
         font = ImageFont.truetype(str(Path('fonts') / 'arial.ttf'), 60)
         small_font = ImageFont.truetype(str(Path('fonts') / 'arial.ttf'), 50)
         draw = ImageDraw.Draw(stories_image)
@@ -148,41 +148,34 @@ class Browser:
             if len(info['name']) < 100
             else info['name'][:90] + '...'
         )
-        lines = textwrap.wrap(name, width=35)
+        lines = textwrap.wrap(name, width=30)
         result_name = ''
         for line in lines:
             result_name += line + '\n'
         name_coords = (80, 1030)
         draw.text(name_coords, result_name, font=font, fill=(0, 0, 0))
-        rectangle_coords = (
-            name_coords[0] - 10,
-            name_coords[1] + 220,
-            1000,
-            name_coords[1] + 370,
-        )
-        draw.rectangle(rectangle_coords, fill=(255, 255, 255, 255))
         try:
             old_value = f'R$ {info["old_value"]:.2f}'.replace('.', ',')
         except ValueError:
             old_value = ''
         draw.text(
-            (80, name_coords[1] + 170),
+            (80, name_coords[1] + 140),
             old_value,
             font=small_font,
             fill=(100, 100, 100),
         )
         width = draw.textlength(old_value, font=font) - 30
         height = 50
-        draw.line((80, name_coords[1] + 170 + height // 2, 80 + width, name_coords[1] + 170 + height // 2), fill=(100, 100, 100), width=2)
+        draw.line((80, name_coords[1] + 140 + height // 2, 80 + width, name_coords[1] + 140 + height // 2), fill=(100, 100, 100), width=2)
         value = f'R$ {info["value"]:.2f}'.replace('.', ',')
         draw.text(
-            (80, rectangle_coords[1] + 20),
+            (80, name_coords[1] + 190),
             value,
             font=bold_font,
             fill=(0, 0, 0),
         )
         draw.text(
-            (80, rectangle_coords[1] + 90),
+            (80, name_coords[1] + 300),
             info['installment'],
             font=small_font,
             fill=(0, 0, 0),

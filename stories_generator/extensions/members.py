@@ -5,7 +5,7 @@ from sqlalchemy import select
 from telebot.util import quick_markup
 
 from stories_generator.database import Session
-from stories_generator.models import Plan, Signature, User
+from stories_generator.models import Plan, Signature, TelegramUser
 from stories_generator.utils import get_plans_reply_markup, get_today_date
 
 
@@ -19,7 +19,7 @@ def init_bot(bot, start):
 
     def on_username(message):
         with Session() as session:
-            user_model = User(username=message.text)
+            user_model = TelegramUser(username=message.text)
             session.add(user_model)
             session.commit()
         bot.send_message(message.chat.id, 'Membro Adicionado!')
@@ -29,7 +29,7 @@ def init_bot(bot, start):
     def show_members(callback_query):
         with Session() as session:
             options = {}
-            for user_model in session.scalars(select(User)).all():
+            for user_model in session.scalars(select(TelegramUser)).all():
                 options[user_model.username] = {
                     'callback_data': f'show_member:{user_model.username}'
                 }
@@ -44,7 +44,7 @@ def init_bot(bot, start):
     def show_members_action(callback_query):
         with Session() as session:
             username = callback_query.data.split(':')[-1]
-            query = select(User).where(User.username == username)
+            query = select(TelegramUser).where(TelegramUser.username == username)
             user_model = session.scalars(query).first()
             if user_model.signatures:
                 send_member_menu(callback_query.message, user_model.signatures)
@@ -153,7 +153,7 @@ def init_bot(bot, start):
     def on_member_plan_days(message, plan_id, username):
         try:
             with Session() as session:
-                query = select(User).where(User.username == username)
+                query = select(TelegramUser).where(TelegramUser.username == username)
                 user_model = session.scalars(query).first()
                 plan_model = session.get(Plan, int(plan_id))
                 signature_model = Signature(
@@ -176,7 +176,7 @@ def init_bot(bot, start):
     def remove_member_action(callback_query):
         with Session() as session:
             username = callback_query.data.split(':')[-1]
-            query = select(User).where(User.username == username)
+            query = select(TelegramUser).where(TelegramUser.username == username)
             user_model = session.scalars(query).first()
             session.delete(user_model)
             session.commit()

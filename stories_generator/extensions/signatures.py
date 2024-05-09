@@ -10,7 +10,7 @@ from telebot.util import quick_markup
 
 from stories_generator.config import config
 from stories_generator.database import Session
-from stories_generator.models import Payment, Plan, Signature, User
+from stories_generator.models import Payment, Plan, Signature, TelegramUser
 from stories_generator.utils import get_plans_reply_markup, get_today_date
 
 mercado_pago_sdk = mercadopago.SDK(config['MERCADO_PAGO_ACCESS_TOKEN'])
@@ -21,7 +21,7 @@ def init_bot(bot, start):
     def show_signature(callback_query):
         with Session() as session:
             username = callback_query.data.split(':')[-1]
-            query = select(User).where(User.username == username)
+            query = select(TelegramUser).where(TelegramUser.username == username)
             user_model = session.scalars(query).first()
             query = (
                 select(Signature)
@@ -127,8 +127,8 @@ def init_bot(bot, start):
             )
             os.remove(Path(qr_code_filename).absolute())
             with Session() as session:
-                query = select(User).where(
-                    User.username == callback_query.message.chat.username
+                query = select(TelegramUser).where(
+                    TelegramUser.username == callback_query.message.chat.username
                 )
                 user_model = session.scalars(query).first()
                 payment = Payment(

@@ -7,7 +7,7 @@ from telebot.util import quick_markup
 
 from stories_generator.browser import Browser
 from stories_generator.database import Session
-from stories_generator.models import Chat, Product, Signature, User
+from stories_generator.models import Chat, Product, Signature, TelegramUser
 from stories_generator.utils import get_today_date
 
 browser = Browser()
@@ -41,7 +41,7 @@ def init_bot(bot, start):
 
     def on_affiliate_url(message):
         with Session() as session:
-            query = select(User).where(User.username == message.chat.username)
+            query = select(TelegramUser).where(TelegramUser.username == message.chat.username)
             user_model = session.scalars(query).first()
             query = (
                 select(Signature)
@@ -93,7 +93,7 @@ def init_bot(bot, start):
         }
         info = functions[website](message.text)
         with Session() as session:
-            query = select(User).where(User.username == message.chat.username)
+            query = select(TelegramUser).where(TelegramUser.username == message.chat.username)
             user_model = session.scalars(query).first()
             images_paths = {
                 'mercadolivre': user_model.mercado_livre_image,
@@ -209,8 +209,8 @@ def init_bot(bot, start):
     def send_feed(callback_query):
         reply_markup = {}
         with Session() as session:
-            query = select(User).where(
-                User.username == callback_query.message.chat.username
+            query = select(TelegramUser).where(
+                TelegramUser.username == callback_query.message.chat.username
             )
             user = session.scalars(query).first()
             query = select(Chat).where(Chat.user_id == user.id)

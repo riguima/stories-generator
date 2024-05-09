@@ -4,7 +4,7 @@ from sqlalchemy import select
 from telebot.util import quick_markup
 
 from stories_generator.database import Session
-from stories_generator.models import User
+from stories_generator.models import TelegramUser
 
 
 def init_bot(bot, start):
@@ -52,8 +52,8 @@ def init_bot(bot, start):
     @bot.callback_query_handler(func=lambda c: 'upload_image:' in c.data)
     def upload_image(callback_query):
         with Session() as session:
-            query = select(User).where(
-                User.username == callback_query.message.chat.username
+            query = select(TelegramUser).where(
+                TelegramUser.username == callback_query.message.chat.username
             )
             user_model = session.scalars(query).first()
         website = callback_query.data.split(':')[-1]
@@ -108,8 +108,8 @@ def init_bot(bot, start):
             with open(image_path, 'wb') as f:
                 f.write(image_file)
             with Session() as session:
-                query = select(User).where(
-                    User.username == message.chat.username
+                query = select(TelegramUser).where(
+                    TelegramUser.username == message.chat.username
                 )
                 user_model = session.scalars(query).first()
                 if website == 'shopee':
@@ -145,7 +145,7 @@ def init_bot(bot, start):
 
     def on_text_model(message):
         with Session() as session:
-            query = select(User).where(User.username == message.chat.username)
+            query = select(TelegramUser).where(TelegramUser.username == message.chat.username)
             user_model = session.scalars(query).first()
             user_model.text_model = message.text
             session.commit()

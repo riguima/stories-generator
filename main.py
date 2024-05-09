@@ -7,7 +7,7 @@ from telebot.util import quick_markup, update_types
 
 from stories_generator.config import config
 from stories_generator.database import Session
-from stories_generator.models import User
+from stories_generator.models import TelegramUser
 
 bot = telebot.TeleBot(config['BOT_TOKEN'])
 
@@ -16,10 +16,10 @@ bot = telebot.TeleBot(config['BOT_TOKEN'])
 def start(message):
     if message.chat.username:
         with Session() as session:
-            query = select(User).where(User.username == message.chat.username)
+            query = select(TelegramUser).where(TelegramUser.username == message.chat.username)
             user_model = session.scalars(query).first()
             if user_model is None:
-                user_model = User(username=message.chat.username)
+                user_model = TelegramUser(username=message.chat.username)
                 session.add(user_model)
                 session.commit()
                 session.flush()

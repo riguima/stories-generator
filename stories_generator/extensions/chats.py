@@ -1,15 +1,15 @@
 from sqlalchemy import select
 
 from stories_generator.database import Session
-from stories_generator.models import Chat, User
+from stories_generator.models import Chat, TelegramUser
 
 
 def init_bot(bot, start):
     @bot.message_handler(content_types=['new_chat_members'])
     def on_group_join(message):
         with Session() as session:
-            query = select(User).where(
-                User.username == message.from_user.username
+            query = select(TelegramUser).where(
+                TelegramUser.username == message.from_user.username
             )
             user = session.scalars(query).first()
             if user:
@@ -24,8 +24,8 @@ def init_bot(bot, start):
     @bot.message_handler(content_types=['left_chat_member'])
     def on_group_left(message):
         with Session() as session:
-            query = select(User).where(
-                User.username == message.from_user.username
+            query = select(TelegramUser).where(
+                TelegramUser.username == message.from_user.username
             )
             user = session.scalars(query).first()
             if user:
@@ -42,8 +42,8 @@ def init_bot(bot, start):
     @bot.my_chat_member_handler()
     def on_channel_update(update):
         with Session() as session:
-            query = select(User).where(
-                User.username == update.from_user.username
+            query = select(TelegramUser).where(
+                TelegramUser.username == update.from_user.username
             )
             user = session.scalars(query).first()
             if user:

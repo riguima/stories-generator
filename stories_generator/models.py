@@ -27,8 +27,8 @@ class Product(Base):
     url: Mapped[str]
 
 
-class User(Base):
-    __tablename__ = 'users'
+class TelegramUser(Base):
+    __tablename__ = 'telegram_users'
     id: Mapped[int] = mapped_column(primary_key=True)
     username: Mapped[str]
     shopee_image: Mapped[Optional[str]]

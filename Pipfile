@@ -54,6 +54,7 @@ pytz = "*"
 httpx = "*"
 parsel = "*"
 proxy-randomizer = "*"
+psycopg2-binary = "*"
 
 [dev-packages]
 blue = "*"

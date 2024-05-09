@@ -1,9 +1,9 @@
 from datetime import date, datetime, timedelta
 from typing import List, Optional
 
+from pytz import timezone
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-from stories_generator.utils import get_today_date
 
 from stories_generator.database import db
 
@@ -17,7 +17,7 @@ class Product(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     username: Mapped[str]
     create_date: Mapped[Optional[date]] = mapped_column(
-        default=get_today_date()
+        default=datetime.now(timezone('America/Sao_Paulo')).date()
     )
     name: Mapped[str]
     formatted_old_value: Mapped[Optional[str]]

@@ -41,7 +41,9 @@ class Browser:
                 .replace(',', '.')
             ),
             'installment': selector.css('.best-offer-name::text').get() or '',
-            'image_url': selector.css('#landingImage').attrib['data-old-hires'],
+            'image_url': selector.css('#landingImage').attrib[
+                'data-old-hires'
+            ],
             'url': url,
         }
 
@@ -79,8 +81,14 @@ class Browser:
             value = old_value
             old_value = ''
         try:
-            installment = [int(v) for v in re.findall(r'>(\d{2})<', response.text) if int(v) <= 12][0]
-            installment = f'em {installment}x R$ {round(value / installment, 2):.2f} sem juros'.replace('.', ',')
+            installment = [
+                int(v)
+                for v in re.findall(r'>(\d{2})<', response.text)
+                if int(v) <= 12
+            ][0]
+            installment = f'em {installment}x R$ {round(value / installment, 2):.2f} sem juros'.replace(
+                '.', ','
+            )
         except IndexError:
             installment = ''
         return {
@@ -139,7 +147,9 @@ class Browser:
             product_image,
             (stories_image.width // 2 - product_image.width // 2, 400),
         )
-        bold_font = ImageFont.truetype(str(Path('fonts') / 'arial-bold.ttf'), 100)
+        bold_font = ImageFont.truetype(
+            str(Path('fonts') / 'arial-bold.ttf'), 100
+        )
         font = ImageFont.truetype(str(Path('fonts') / 'arial.ttf'), 60)
         small_font = ImageFont.truetype(str(Path('fonts') / 'arial.ttf'), 50)
         draw = ImageDraw.Draw(stories_image)
@@ -166,7 +176,16 @@ class Browser:
         )
         width = draw.textlength(old_value, font=font) - 30
         height = 50
-        draw.line((80, name_coords[1] + 140 + height // 2, 80 + width, name_coords[1] + 140 + height // 2), fill=(100, 100, 100), width=2)
+        draw.line(
+            (
+                80,
+                name_coords[1] + 140 + height // 2,
+                80 + width,
+                name_coords[1] + 140 + height // 2,
+            ),
+            fill=(100, 100, 100),
+            width=2,
+        )
         value = f'R$ {info["value"]:.2f}'.replace('.', ',')
         draw.text(
             (80, name_coords[1] + 190),

@@ -7,7 +7,7 @@ from telebot.util import quick_markup
 
 from stories_generator.browser import Browser
 from stories_generator.database import Session
-from stories_generator.models import Chat, Signature, User, Product
+from stories_generator.models import Chat, Product, Signature, User
 from stories_generator.utils import get_today_date
 
 browser = Browser()
@@ -196,7 +196,7 @@ def init_bot(bot, start):
                     },
                     #'Enviar': {
                     #    'callback_data': 'send_feed',
-                    #},
+                    # },
                     'Voltar': {
                         'callback_data': 'delete_message_and_return',
                     },

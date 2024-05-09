@@ -60,15 +60,15 @@ class Chat(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     chat_id: Mapped[str]
     title: Mapped[str]
-    user: Mapped['User'] = relationship(back_populates='chats')
-    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
+    user: Mapped['TelegramUser'] = relationship(back_populates='chats')
+    user_id: Mapped[int] = mapped_column(ForeignKey('telegram_users.id'))
 
 
 class Signature(Base):
     __tablename__ = 'signatures'
     id: Mapped[int] = mapped_column(primary_key=True)
-    user: Mapped['User'] = relationship(back_populates='signatures')
-    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
+    user: Mapped['TelegramUser'] = relationship(back_populates='signatures')
+    user_id: Mapped[int] = mapped_column(ForeignKey('telegram_users.id'))
     plan: Mapped['Plan'] = relationship(back_populates='signatures')
     plan_id: Mapped[int] = mapped_column(ForeignKey('plans.id'))
     payment_id: Mapped[Optional[str]]
@@ -93,8 +93,8 @@ class Payment(Base):
     __tablename__ = 'payments'
     id: Mapped[int] = mapped_column(primary_key=True)
     payment_id: Mapped[str]
-    user: Mapped['User'] = relationship(back_populates='payments')
-    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
+    user: Mapped['TelegramUser'] = relationship(back_populates='payments')
+    user_id: Mapped[int] = mapped_column(ForeignKey('telegram_users.id'))
     chat_id: Mapped[str]
 
 

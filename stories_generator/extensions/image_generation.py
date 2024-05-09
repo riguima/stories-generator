@@ -41,7 +41,9 @@ def init_bot(bot, start):
 
     def on_affiliate_url(message):
         with Session() as session:
-            query = select(TelegramUser).where(TelegramUser.username == message.chat.username)
+            query = select(TelegramUser).where(
+                TelegramUser.username == message.chat.username
+            )
             user_model = session.scalars(query).first()
             query = (
                 select(Signature)
@@ -93,7 +95,9 @@ def init_bot(bot, start):
         }
         info = functions[website](message.text)
         with Session() as session:
-            query = select(TelegramUser).where(TelegramUser.username == message.chat.username)
+            query = select(TelegramUser).where(
+                TelegramUser.username == message.chat.username
+            )
             user_model = session.scalars(query).first()
             images_paths = {
                 'mercadolivre': user_model.mercado_livre_image,
@@ -158,6 +162,14 @@ def init_bot(bot, start):
             ),
         )
         with Session() as session:
+            query = (
+                select(Product)
+                .where(Product.username == message.chat.username)
+                .where(Product.url == message.text)
+            )
+            product = session.scalars(query).first()
+            if product:
+                session.delete(product)
             product = Product(
                 username=message.chat.username,
                 name=info['name'],
@@ -166,6 +178,7 @@ def init_bot(bot, start):
                 installment=info['installment'],
                 image_url=info['image_url'],
                 url=message.text,
+                website=website,
             )
             session.add(product)
             session.commit()

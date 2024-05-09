@@ -16,7 +16,9 @@ bot = telebot.TeleBot(config['BOT_TOKEN'])
 def start(message):
     if message.chat.username:
         with Session() as session:
-            query = select(TelegramUser).where(TelegramUser.username == message.chat.username)
+            query = select(TelegramUser).where(
+                TelegramUser.username == message.chat.username
+            )
             user_model = session.scalars(query).first()
             if user_model is None:
                 user_model = TelegramUser(username=message.chat.username)

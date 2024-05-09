@@ -21,7 +21,9 @@ def init_bot(bot, start):
     def show_signature(callback_query):
         with Session() as session:
             username = callback_query.data.split(':')[-1]
-            query = select(TelegramUser).where(TelegramUser.username == username)
+            query = select(TelegramUser).where(
+                TelegramUser.username == username
+            )
             user_model = session.scalars(query).first()
             query = (
                 select(Signature)
@@ -128,7 +130,8 @@ def init_bot(bot, start):
             os.remove(Path(qr_code_filename).absolute())
             with Session() as session:
                 query = select(TelegramUser).where(
-                    TelegramUser.username == callback_query.message.chat.username
+                    TelegramUser.username
+                    == callback_query.message.chat.username
                 )
                 user_model = session.scalars(query).first()
                 payment = Payment(

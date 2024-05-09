@@ -25,6 +25,7 @@ class Product(Base):
     installment: Mapped[Optional[str]]
     image_url: Mapped[str]
     url: Mapped[str]
+    website: Mapped[str]
 
 
 class TelegramUser(Base):

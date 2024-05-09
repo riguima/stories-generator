@@ -44,7 +44,9 @@ def init_bot(bot, start):
     def show_members_action(callback_query):
         with Session() as session:
             username = callback_query.data.split(':')[-1]
-            query = select(TelegramUser).where(TelegramUser.username == username)
+            query = select(TelegramUser).where(
+                TelegramUser.username == username
+            )
             user_model = session.scalars(query).first()
             if user_model.signatures:
                 send_member_menu(callback_query.message, user_model.signatures)
@@ -153,7 +155,9 @@ def init_bot(bot, start):
     def on_member_plan_days(message, plan_id, username):
         try:
             with Session() as session:
-                query = select(TelegramUser).where(TelegramUser.username == username)
+                query = select(TelegramUser).where(
+                    TelegramUser.username == username
+                )
                 user_model = session.scalars(query).first()
                 plan_model = session.get(Plan, int(plan_id))
                 signature_model = Signature(
@@ -176,7 +180,9 @@ def init_bot(bot, start):
     def remove_member_action(callback_query):
         with Session() as session:
             username = callback_query.data.split(':')[-1]
-            query = select(TelegramUser).where(TelegramUser.username == username)
+            query = select(TelegramUser).where(
+                TelegramUser.username == username
+            )
             user_model = session.scalars(query).first()
             session.delete(user_model)
             session.commit()

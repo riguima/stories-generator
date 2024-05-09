@@ -145,7 +145,9 @@ def init_bot(bot, start):
 
     def on_text_model(message):
         with Session() as session:
-            query = select(TelegramUser).where(TelegramUser.username == message.chat.username)
+            query = select(TelegramUser).where(
+                TelegramUser.username == message.chat.username
+            )
             user_model = session.scalars(query).first()
             user_model.text_model = message.text
             session.commit()

@@ -37,7 +37,6 @@ def init_bot(bot, start):
             'Escolha uma opção',
             reply_markup=quick_markup(
                 {
-                    'Shopee': {'callback_data': f'{action}:shopee'},
                     'Mercado Livre': {
                         'callback_data': f'{action}:mercado_livre'
                     },
@@ -58,7 +57,6 @@ def init_bot(bot, start):
             user_model = session.scalars(query).first()
         website = callback_query.data.split(':')[-1]
         images = {
-            'shopee': user_model.shopee_image,
             'mercado_livre': user_model.mercado_livre_image,
             'magalu': user_model.magalu_image,
             'amazon': user_model.amazon_image,
@@ -112,9 +110,7 @@ def init_bot(bot, start):
                     TelegramUser.username == message.chat.username
                 )
                 user_model = session.scalars(query).first()
-                if website == 'shopee':
-                    user_model.shopee_image = image_path
-                elif website == 'mercado_livre':
+                if website == 'mercado_livre':
                     user_model.mercado_livre_image = image_path
                 elif website == 'magalu':
                     user_model.magalu_image = image_path

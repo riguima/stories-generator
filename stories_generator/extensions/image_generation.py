@@ -1,5 +1,6 @@
 import os
 
+import telebot
 import toml
 from httpx import get
 from sqlalchemy import select
@@ -68,7 +69,6 @@ def init_bot(bot, start):
         websites = [
             'mercadolivre',
             'amazon',
-            'shopee',
             'magazineluiza',
             'magazinevoce',
         ]
@@ -82,7 +82,7 @@ def init_bot(bot, start):
         if response.status_code != 200 or url is None or website is None:
             bot.send_message(
                 message.chat.id,
-                'URL inválida, digite uma URL de alguns desses sites: Shopee, Mercado Livre, Amazon, Magalu',
+                'URL inválida, digite uma URL de alguns desses sites: Mercado Livre, Amazon, Magalu',
             )
             bot.delete_message(message.chat.id, generating_message.id)
             start(message)
@@ -155,7 +155,7 @@ def init_bot(bot, start):
             reply_markup=quick_markup(
                 {
                     'Editar': {'callback_data': 'edit_feed_message_caption'},
-                    #'Enviar': {'callback_data': 'send_feed'},
+                    'Enviar': {'callback_data': 'send_feed'},
                     'Voltar': {'callback_data': 'return_to_main_menu'},
                 },
                 row_width=1,
@@ -207,9 +207,9 @@ def init_bot(bot, start):
                     'Editar': {
                         'callback_data': 'edit_feed_message_caption',
                     },
-                    #'Enviar': {
-                    #    'callback_data': 'send_feed',
-                    # },
+                    'Enviar': {
+                        'callback_data': 'send_feed',
+                    },
                     'Voltar': {
                         'callback_data': 'delete_message_and_return',
                     },
@@ -243,17 +243,30 @@ def init_bot(bot, start):
         chat_id = int(callback_query.data.split(':')[-1])
         with Session() as session:
             chat = session.get(Chat, chat_id)
-            bot.send_photo(
-                int(chat.chat_id),
-                open(
-                    feed_messages[callback_query.message.chat.username][1],
-                    'rb',
-                ),
-                caption=feed_messages[callback_query.message.chat.username][
-                    0
-                ].caption,
+            query = select(TelegramUser).where(
+                TelegramUser.username == callback_query.message.chat.username
             )
-            bot.send_message(callback_query.message.chat.id, 'Feed Enviado!')
+            user = session.scalars(query).first()
+            if user.bot_token:
+                user_bot = telebot.TeleBot(user.bot_token)
+                user_bot.send_photo(
+                    int(chat.chat_id),
+                    open(
+                        feed_messages[callback_query.message.chat.username][1],
+                        'rb',
+                    ),
+                    caption=feed_messages[
+                        callback_query.message.chat.username
+                    ][0].caption,
+                )
+                bot.send_message(
+                    callback_query.message.chat.id, 'Feed Enviado!'
+                )
+            else:
+                bot.send_message(
+                    callback_query.message.chat.id,
+                    'Defina primeiro o Bot Token para fazer o envio do feed',
+                )
             os.remove(feed_messages[callback_query.message.chat.username][1])
             del feed_messages[callback_query.message.chat.username]
             start(callback_query.message)
@@ -265,3 +278,22 @@ def init_bot(bot, start):
         os.remove(feed_messages[callback_query.message.chat.username][1])
         del feed_messages[callback_query.message.chat.username]
         start(callback_query.message)
+
+    @bot.callback_query_handler(func=lambda c: c.data == 'set_bot_token')
+    def set_bot_token(callback_query):
+        bot.send_message(
+            callback_query.message.chat.id,
+            'Envie o Token do Bot que enviará os feed nos grupos ou canais',
+        )
+        bot.register_next_step_handler(callback_query.message, on_bot_token)
+
+    def on_bot_token(message):
+        with Session() as session:
+            query = select(TelegramUser).where(
+                TelegramUser.username == message.chat.username
+            )
+            user = session.scalars(query).first()
+            user.bot_token = message.text
+            session.commit()
+            bot.send_message(message.chat.id, 'Bot Token Definido!')
+            start(message)

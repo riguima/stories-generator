@@ -29,6 +29,7 @@ def start(message):
             'Minhas Assinaturas': {
                 'callback_data': f'show_signature:{message.chat.username}'
             },
+            'Definir Bot Token': {'callback_data': 'set_bot_token'},
             'Layout': {'callback_data': 'show_layout'},
             'Gerar Imagens': {'callback_data': 'generate_images'},
         }

@@ -32,7 +32,7 @@ class TelegramUser(Base):
     __tablename__ = 'telegram_users'
     id: Mapped[int] = mapped_column(primary_key=True)
     username: Mapped[str]
-    shopee_image: Mapped[Optional[str]]
+    bot_token: Mapped[Optional[str]]
     mercado_livre_image: Mapped[Optional[str]] = mapped_column(
         default='static/background.png'
     )

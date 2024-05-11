@@ -1,3 +1,6 @@
+from datetime import timedelta
+
+from sqlalchemy import select
 from telebot.util import quick_markup
 
 from stories_generator.database import Session
@@ -6,6 +9,35 @@ from stories_generator.utils import get_plans_reply_markup
 
 
 def init_bot(bot, start):
+    @bot.callback_query_handler(func=lambda c: c.data == 'edit_test_plan')
+    def edit_test_plan(callback_query):
+        bot.send_message(
+            callback_query.message.chat.id,
+            'Digite quantos dias vai ter o plano teste (digite 0 para desativar o plano)',
+        )
+        bot.register_next_step_handler(
+            callback_query.message, on_test_plan_days
+        )
+
+    def on_test_plan_days(message):
+        try:
+            with Session() as session:
+                query = select(Plan).where(Plan.value == None)
+                plan = session.scalars(query).first()
+                plan.days = int(message.text)
+                for signature_model in plan.signatures:
+                    signature_model.due_date = (
+                        signature_model.create_date
+                        + timedelta(int(message.text))
+                    )
+                session.commit()
+                bot.send_message(message.chat.id, 'Plano Teste Alterado!')
+                start(message)
+        except ValueError:
+            bot.register_next_step_handler(
+                message, 'Valor inválido, digite como no exemplo: 10 ou 15'
+            )
+
     @bot.callback_query_handler(func=lambda c: c.data == 'add_plan')
     def add_plan(callback_query):
         bot.send_message(

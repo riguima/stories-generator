@@ -28,6 +28,30 @@ class Product(Base):
     website: Mapped[str]
 
 
+class User(Base):
+    __tablename__ = 'users'
+    id: Mapped[int] = mapped_column(primary_key=True)
+    username: Mapped[str]
+    password: Mapped[str]
+    authenticated: Mapped[Optional[bool]] = mapped_column(default=False)
+    is_admin: Mapped[Optional[bool]] = mapped_column(default=False)
+
+    @property
+    def is_authenticated(self):
+        return self.authenticated
+
+    @property
+    def is_active(self):
+        return True
+
+    @property
+    def is_anonymous(self):
+        return False
+
+    def get_id(self):
+        return str(self.id)
+
+
 class TelegramUser(Base):
     __tablename__ = 'telegram_users'
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -83,7 +107,7 @@ class Plan(Base):
     __tablename__ = 'plans'
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
-    value: Mapped[float]
+    value: Mapped[Optional[float]]
     days: Mapped[int]
     signatures: Mapped[List['Signature']] = relationship(
         back_populates='plan', cascade='all,delete-orphan'

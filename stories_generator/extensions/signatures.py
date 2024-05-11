@@ -27,7 +27,7 @@ def init_bot(bot, start):
             user_model = session.scalars(query).first()
             query = (
                 select(Signature)
-                .where(Signature.due_date >= get_today_date())
+                .where(Signature.due_date > get_today_date())
                 .where(Signature.user_id == user_model.id)
             )
             signatures_models = session.scalars(query).all()
@@ -49,11 +49,11 @@ def init_bot(bot, start):
     def send_signature_menu(message, signatures_models):
         reply_markup = {}
         for signature_model in signatures_models:
-            reply_markup[
-                f'Status: Ativa - {signature_model.plan.name} - {signature_model.plan.days} Dias - R${signature_model.plan.value:.2f}'.replace(
-                    '.', ','
-                )
-            ] = {
+            try:
+                label = f'Status: Ativa - {signature_model.plan.name} - {signature_model.plan.days} Dias - R${signature_model.plan.value:.2f}'.replace('.', ',')
+            except TypeError:
+                label = f'Status: Ativa - {signature_model.plan.name} - {signature_model.plan.days} Dias - Plano Teste'
+            reply_markup[label] = {
                 'callback_data': f'show_signature_message:{signature_model.id}'
             }
         reply_markup['Comprar acesso'] = {'callback_data': 'sign'}

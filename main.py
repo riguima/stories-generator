@@ -1,3 +1,6 @@
+import secrets
+import string
+from datetime import timedelta
 from importlib import import_module
 from pathlib import Path
 
@@ -8,7 +11,7 @@ from telebot.util import quick_markup, update_types
 
 from stories_generator.config import config
 from stories_generator.database import Session
-from stories_generator.models import Signature, TelegramUser
+from stories_generator.models import Plan, Signature, TelegramUser, User
 from stories_generator.utils import get_today_date
 
 bot = telebot.TeleBot(config['BOT_TOKEN'])
@@ -22,20 +25,48 @@ def start(message):
                 TelegramUser.username == message.chat.username
             )
             user_model = session.scalars(query).first()
-            if user_model is None:
-                user_model = TelegramUser(username=message.chat.username)
-                session.add(user_model)
+            query = select(Plan).where(Plan.value == None)
+            plan_model = session.scalars(query).first()
+            if plan_model is None:
+                plan_model = Plan(name='Plano Teste', days=0)
+                session.add(plan_model)
                 session.commit()
+            if user_model is None:
+                user_model = User(
+                    username=message.chat.username,
+                    password=''.join(
+                        secrets.choice(string.ascii_letters + string.digits)
+                        for _ in range(20)
+                    ),
+                    is_admin=True,
+                )
+                telegram_user_model = TelegramUser(
+                    username=message.chat.username
+                )
+                session.add(user_model)
+                session.add(telegram_user_model)
                 session.flush()
+                signature_model = Signature(
+                    user_id=user_model.id,
+                    plan_id=plan_model.id,
+                    due_date=get_today_date()
+                    + timedelta(days=plan_model.days),
+                )
+                session.add(signature_model)
+                session.commit()
         options = {
             'Minhas Assinaturas': {
                 'callback_data': f'show_signature:{message.chat.username}'
             },
+            'Acesso do Site': {'callback_data': 'show_admin_login'},
             'Definir Bot Token': {'callback_data': 'set_bot_token'},
             'Layout': {'callback_data': 'show_layout'},
             'Gerar Imagens': {'callback_data': 'generate_images'},
         }
         if message.chat.id in config['ADMINS']:
+            options['Alterar Plano Teste'] = {
+                'callback_data': 'edit_test_plan'
+            }
             options['Assinantes'] = {'callback_data': 'show_subscribers'}
             options['Editar Mensagem do Menu'] = {
                 'callback_data': 'edit_menu_message'
@@ -56,6 +87,24 @@ def start(message):
         bot.send_message(
             message.chat.id,
             'Adicione um arroba para sua conta do Telegram para utilizar esse bot',
+        )
+
+
+@bot.callback_query_handler(lambda c: c.data == 'show_admin_login')
+def show_admin_login(callback_query):
+    with Session() as session:
+        query = select(User).where(
+            User.username == callback_query.message.chat.username
+        )
+        user_model = session.scalars(query).first()
+        bot.send_message(
+            callback_query.message.chat.id,
+            f'Link: https://promodegrupo.com/login\n\nLogin: {user_model.username}\nSenha: {user_model.password}',
+            reply_markup=quick_markup(
+                {
+                    'Voltar': {'callback_data': 'return_to_main_menu'},
+                }
+            ),
         )
 
 

@@ -72,6 +72,7 @@ def init_bot(bot, start):
             'Escolha uma opção',
             reply_markup=quick_markup(
                 {
+                    'Editar Plano': {'callback_data': f'edit_plan:{plan_id}'},
                     'Remover Plano': {
                         'callback_data': f'remove_plan:{plan_id}'
                     },
@@ -82,7 +83,7 @@ def init_bot(bot, start):
         )
 
     @bot.callback_query_handler(func=lambda c: 'remove_plan:' in c.data)
-    def remove_plan_action(callback_query):
+    def remove_plan(callback_query):
         with Session() as session:
             plan_id = int(callback_query.data.split(':')[-1])
             plan_model = session.get(Plan, plan_id)
@@ -90,3 +91,37 @@ def init_bot(bot, start):
             session.commit()
             bot.send_message(callback_query.message.chat.id, 'Plano Removido!')
             start(callback_query.message)
+
+    @bot.callback_query_handler(func=lambda c: 'edit_plan:' in c.data)
+    def edit_plan(callback_query):
+        plan_id = int(callback_query.data.split(':')[-1])
+        bot.send_message(
+            callback_query.message.chat.id, 'Digite o nome para o plano'
+        )
+        bot.register_next_step_handler(
+            callback_query.message,
+            lambda m: on_edit_plan_name(m, plan_id),
+        )
+
+    def on_edit_plan_name(message, plan_id):
+        with Session() as session:
+            plan_model = session.get(Plan, plan_id)
+            plan_model.name = message.text
+            session.commit()
+            bot.send_message(message.chat.id, 'Digite o valor do plano')
+            bot.register_next_step_handler(
+                message, lambda m: on_edit_plan_value(m, plan_id)
+            )
+
+    def on_edit_plan_value(message, plan_id):
+        try:
+            with Session() as session:
+                plan_model = session.get(Plan, plan_id)
+                plan_model.value = float(message.text.replace(',', '.'))
+                session.commit()
+                bot.send_message(message.chat.id, 'Plano Editado!')
+                start(message)
+        except ValueError:
+            bot.register_next_step_handler(
+                message, lambda m: on_edit_plan_value(m, plan_id)
+            )

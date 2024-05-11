@@ -29,6 +29,7 @@ def init_bot(bot, start):
     def show_members(callback_query):
         with Session() as session:
             options = {}
+            options['Buscar Membros'] = {'callback_data': 'search_members'}
             for user_model in session.scalars(select(TelegramUser)).all():
                 options[user_model.username] = {
                     'callback_data': f'show_member:{user_model.username}'
@@ -36,6 +37,29 @@ def init_bot(bot, start):
             options['Voltar'] = {'callback_data': 'return_to_main_menu'}
             bot.send_message(
                 callback_query.message.chat.id,
+                'Membros',
+                reply_markup=quick_markup(options, row_width=1),
+            )
+
+    @bot.callback_query_handler(func=lambda c: c.data == 'search_members')
+    def search_members(callback_query):
+        bot.send_message(
+            callback_query.message.chat.id, 'Digite o termo para busca'
+        )
+        bot.register_next_step_handler(callback_query.message, on_search_term)
+
+    def on_search_term(message):
+        with Session() as session:
+            options = {}
+            options['Buscar Membros'] = {'callback_data': 'search_members'}
+            for user_model in session.scalars(select(TelegramUser)).all():
+                if message.text in user_model.username:
+                    options[user_model.username] = {
+                        'callback_data': f'show_member:{user_model.username}'
+                    }
+            options['Voltar'] = {'callback_data': 'return_to_main_menu'}
+            bot.send_message(
+                message.chat.id,
                 'Membros',
                 reply_markup=quick_markup(options, row_width=1),
             )

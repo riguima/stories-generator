@@ -3,6 +3,7 @@ import string
 from datetime import timedelta
 from importlib import import_module
 from pathlib import Path
+import re
 
 import telebot
 import toml
@@ -113,6 +114,7 @@ def show_subscribers(callback_query):
     with Session() as session:
         users = session.scalars(select(TelegramUser)).all()
         actives = 0
+        plans = ''
         for user_model in users:
             query = (
                 select(Signature)
@@ -122,9 +124,16 @@ def show_subscribers(callback_query):
             signatures_models = session.scalars(query).all()
             if signatures_models:
                 actives += 1
+                for signature_model in signatures_models:
+                    if signature_model.plan.name in plans:
+                        pattern = signature_model.plan.name + r': \d+'
+                        actives_in_plan = int(re.findall(signature_model.plan.name + r': (\d+)', plans)[0])
+                        plans = re.sub(pattern, f'{signature_model.plan.name}: {actives_in_plan + 1}', plans)
+                    else:
+                        plans += f'\n{signature_model.plan.name}: 1'
         bot.send_message(
             callback_query.message.chat.id,
-            f'Assinantes: {len(users)}\nAtivos: {actives}',
+            f'Número de Usuários: {len(users)}\nAtivos: {actives}\nInativos: {len(users) - actives}\n{plans}',
             reply_markup=quick_markup(
                 {'Voltar': {'callback_data': 'return_to_main_menu'}}
             ),

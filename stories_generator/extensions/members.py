@@ -97,12 +97,14 @@ def init_bot(bot, start):
         for signature_model in signatures_models:
             status = (
                 'Ativa'
-                if get_today_date() <= signature_model.due_date
+                if get_today_date() < signature_model.due_date
                 else 'Inativa'
             )
-            reply_markup[
-                f'Status: {status} - {signature_model.plan.name} - {signature_model.plan.days} Dias - R${signature_model.plan.value:.2f}'
-            ] = {
+            try:
+                label = f'Status: {status} - {signature_model.plan.name} - {signature_model.plan.days} Dias - R${signature_model.plan.value:.2f}'.replace('.', ',')
+            except TypeError:
+                label = f'Status: {status} - {signature_model.plan.name} - {signature_model.plan.days} Dias - Plano Teste'
+            reply_markup[label] = {
                 'callback_data': f'show_member_signature:{signature_model.id}'
             }
         reply_markup['Adicionar Plano'] = {
@@ -130,9 +132,13 @@ def init_bot(bot, start):
                 if get_today_date() <= signature_model.due_date
                 else 'Inativa'
             )
+            try:
+                text = f'Status: {status} - {signature_model.plan.name} - {signature_model.plan.days} Dias - R${signature_model.plan.value:.2f}\n\nVencimento do plano: {signature_model.due_date:%d/%m/%Y}\n\nDeseja cancelar essa assinatura?'.replace('.', ',')
+            except TypeError:
+                text = f'Status: {status} - {signature_model.plan.name} - {signature_model.plan.days} Dias - Plano Teste\n\nVencimento do plano: {signature_model.due_date:%d/%m/%Y}\n\nDeseja cancelar essa assinatura?'
             bot.send_message(
                 callback_query.message.chat.id,
-                f'Status: {status} - {signature_model.plan.name} - {signature_model.plan.days} Dias - R${signature_model.plan.value:.2f}\n\nVencimento do plano: {signature_model.due_date:%d/%m/%Y}\n\nDeseja cancelar essa assinatura?',
+                text,
                 reply_markup=quick_markup(
                     {
                         'Sim': {

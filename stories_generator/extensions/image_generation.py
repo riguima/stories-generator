@@ -11,8 +11,6 @@ from stories_generator.database import Session
 from stories_generator.models import Chat, Product, Signature, TelegramUser
 from stories_generator.utils import get_today_date
 
-browser = Browser()
-
 feed_messages = {}
 
 
@@ -87,6 +85,7 @@ def init_bot(bot, start):
             bot.delete_message(message.chat.id, generating_message.id)
             start(message)
             return
+        browser = Browser()
         functions = {
             'mercadolivre': browser.get_mercado_livre_product_info,
             'amazon': browser.get_amazon_product_info,

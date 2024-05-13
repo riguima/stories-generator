@@ -1,4 +1,5 @@
 import os
+from datetime import datetime, timedelta
 
 import telebot
 import toml
@@ -146,6 +147,7 @@ def init_bot(bot, start):
                 image_url=info['image_url'],
                 url=message.text,
                 website=website,
+                create_datetime=datetime.now() - timedelta(hours=3)
             )
             session.add(product)
             session.commit()

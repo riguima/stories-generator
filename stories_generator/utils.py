@@ -7,7 +7,7 @@ from stories_generator.models import Plan
 
 
 def get_today_date():
-    return datetime.now() - timedelta(hours=3)
+    return (datetime.now() - timedelta(hours=3)).date()
 
 
 def get_plans_reply_markup(action, *args):

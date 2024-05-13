@@ -7,6 +7,7 @@ from sqlalchemy import select
 from telebot.util import quick_markup
 
 from stories_generator.browser import Browser
+from stories_generator.config import config
 from stories_generator.database import Session
 from stories_generator.models import Chat, Product, Signature, TelegramUser
 from stories_generator.utils import get_today_date
@@ -123,45 +124,10 @@ def init_bot(bot, start):
             info, image_path
         )
         bot.delete_message(message.chat.id, generating_message.id)
-        bot.send_photo(
-            message.chat.id,
-            open(story_image_path, 'rb'),
-            caption=f'Story gerado ✨🖼️✨\nLink: {message.text}',
-        )
         try:
             old_value = f'R$ {info["old_value"]:.2f}'.replace('.', ',')
         except ValueError:
             old_value = ''
-        caption = user_model.text_model.format(
-            nome=info['name'],
-            valor_antigo=f'~{old_value}~',
-            valor=f'R$ {info["value"]:.2f}'.replace('.', ','),
-            parcelamento=info['installment'],
-            link=f'[Clique Aqui]({message.text})',
-        )
-        if not info['installment']:
-            caption = caption.replace('\n💳', '')
-        feed_messages[message.chat.username] = [
-            bot.send_photo(
-                message.chat.id,
-                open(feed_image_path, 'rb'),
-                caption=caption,
-                parse_mode='MarkdownV2',
-            ),
-            feed_image_path,
-        ]
-        bot.send_message(
-            message.chat.id,
-            'Escolha uma opção',
-            reply_markup=quick_markup(
-                {
-                    'Editar': {'callback_data': 'edit_feed_message_caption'},
-                    'Enviar': {'callback_data': 'send_feed'},
-                    'Voltar': {'callback_data': 'return_to_main_menu'},
-                },
-                row_width=1,
-            ),
-        )
         with Session() as session:
             query = (
                 select(Product)
@@ -183,7 +149,45 @@ def init_bot(bot, start):
             )
             session.add(product)
             session.commit()
-        os.remove(story_image_path)
+            session.flush()
+            bot.send_photo(
+                message.chat.id,
+                open(story_image_path, 'rb'),
+                caption=f'Story gerado ✨🖼️✨\nLink: {config["DOMAIN"]}/{message.chat.username}/produto/{product.id}',
+            )
+            caption = user_model.text_model.format(
+                nome=info['name'],
+                valor_antigo=f'~{old_value}~',
+                valor=f'R$ {info["value"]:.2f}'.replace('.', ','),
+                parcelamento=info['installment'],
+                link=f'[Clique Aqui]({config["DOMAIN"]}/{message.chat.username}/produto/{product.id})',
+            )
+            if not info['installment']:
+                caption = caption.replace('\n💳', '')
+            feed_messages[message.chat.username] = [
+                bot.send_photo(
+                    message.chat.id,
+                    open(feed_image_path, 'rb'),
+                    caption=caption,
+                    parse_mode='MarkdownV2',
+                ),
+                feed_image_path,
+            ]
+            bot.send_message(
+                message.chat.id,
+                'Escolha uma opção',
+                reply_markup=quick_markup(
+                    {
+                        'Editar': {
+                            'callback_data': 'edit_feed_message_caption'
+                        },
+                        'Enviar': {'callback_data': 'send_feed'},
+                        'Voltar': {'callback_data': 'return_to_main_menu'},
+                    },
+                    row_width=1,
+                ),
+            )
+            os.remove(story_image_path)
 
     @bot.callback_query_handler(
         func=lambda c: c.data == 'edit_feed_message_caption'

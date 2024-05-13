@@ -196,9 +196,13 @@ class Browser:
             font=bold_font,
             fill=(0, 0, 0),
         )
+        lines = textwrap.wrap(info['installment'], width=40)
+        result_installment = ''
+        for line in lines:
+            result_installment += line + '\n'
         draw.text(
             (80, name_coords[1] + 300),
-            info['installment'],
+            result_installment,
             font=small_font,
             fill=(0, 0, 0),
         )

@@ -16,8 +16,8 @@ class Product(Base):
     __tablename__ = 'products'
     id: Mapped[int] = mapped_column(primary_key=True)
     username: Mapped[str]
-    create_date: Mapped[Optional[date]] = mapped_column(
-        default=datetime.now(timezone('America/Sao_Paulo')).date()
+    create_datetime: Mapped[Optional[datetime]] = mapped_column(
+        default=datetime.now(timezone('America/Sao_Paulo'))
     )
     name: Mapped[str]
     formatted_old_value: Mapped[Optional[str]]
@@ -98,7 +98,7 @@ class Signature(Base):
     plan_id: Mapped[int] = mapped_column(ForeignKey('plans.id'))
     payment_id: Mapped[Optional[str]]
     create_date: Mapped[Optional[date]] = mapped_column(
-        default=(datetime.now() - timedelta(hours=3)).date()
+        default=datetime.now(timezone('America/Sao_Paulo')).date()
     )
     due_date: Mapped[date]
 

@@ -123,8 +123,7 @@ def init_bot(bot, start):
         functions = {
             'mercadolivre': browser.get_mercado_livre_product_info,
             'amazon': browser.get_amazon_product_info,
-            'magazineluiza': browser.get_magalu_product_info,
-            'magazinevoce': browser.get_magalu_product_info,
+            'magalu': browser.get_magalu_product_info,
         }
         info = functions[website](message.text)
         with Session() as session:
@@ -135,8 +134,7 @@ def init_bot(bot, start):
             images_paths = {
                 'mercadolivre': user_model.mercado_livre_image,
                 'amazon': user_model.amazon_image,
-                'magazineluiza': user_model.magalu_image,
-                'magazinevoce': user_model.magalu_image,
+                'magalu': user_model.magalu_image,
             }
             image_path = images_paths[website]
             if image_path is None:

@@ -1,6 +1,5 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
-from pytz import timezone
 from sqlalchemy import select
 
 from stories_generator.database import Session
@@ -8,7 +7,7 @@ from stories_generator.models import Plan
 
 
 def get_today_date():
-    return datetime.now(timezone('America/Sao_Paulo')).date()
+    return datetime.now() - timedelta(hours=3)
 
 
 def get_plans_reply_markup(action, *args):

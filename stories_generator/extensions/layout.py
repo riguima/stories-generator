@@ -92,7 +92,11 @@ def init_bot(bot, start):
             valid_extensions = ['jpeg', 'jpg', 'png']
             if image.file_path.split('.')[-1].lower() not in valid_extensions:
                 bot.send_message(
-                    message.chat.id, 'Imagem inválida, tente novamente'
+                    message.chat.id,
+                    'Imagem inválida, tente novamente',
+                    reply_markup=quick_markup(
+                        {'Voltar': {'callback_data': 'return_to_main_menu'}}
+                    ),
                 )
                 bot.register_next_step_handler(
                     message, lambda m: on_image(m, website)

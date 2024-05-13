@@ -145,7 +145,10 @@ class Browser:
         product_image.thumbnail((900, 600), Image.Resampling.LANCZOS)
         stories_image.paste(
             product_image,
-            (stories_image.width // 2 - product_image.width // 2, 400),
+            (
+                stories_image.width // 2 - product_image.width // 2,
+                400 + (500 // 2 - product_image.height // 2),
+            ),
         )
         bold_font = ImageFont.truetype(
             str(Path('fonts') / 'arial-bold.ttf'), 100
@@ -155,8 +158,8 @@ class Browser:
         draw = ImageDraw.Draw(stories_image)
         name = (
             info['name']
-            if len(info['name']) < 60 
-            else info['name'][:50] + '...'
+            if len(info['name']) < 50
+            else info['name'][:40] + '...'
         )
         lines = textwrap.wrap(name, width=30)
         result_name = ''

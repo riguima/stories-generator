@@ -16,9 +16,13 @@ def get_plans_reply_markup(action, *args):
     with Session() as session:
         for plan_model in session.scalars(select(Plan)).all():
             try:
-                label = f'{plan_model.name} - {plan_model.days} Dias - R${plan_model.value:.2f}'.replace('.', ',')
+                label = f'{plan_model.name} - {plan_model.days} Dias - R${plan_model.value:.2f}'.replace(
+                    '.', ','
+                )
             except TypeError:
-                label = f'{plan_model.name} - {plan_model.days} Dias - Plano Teste'
+                label = (
+                    f'{plan_model.name} - {plan_model.days} Dias - Plano Teste'
+                )
             reply_markup[label] = {
                 'callback_data': ':'.join([action, str(plan_model.id), *args])
             }

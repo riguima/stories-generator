@@ -101,7 +101,9 @@ def init_bot(bot, start):
                 else 'Inativa'
             )
             try:
-                label = f'Status: {status} - {signature_model.plan.name} - {signature_model.plan.days} Dias - R${signature_model.plan.value:.2f}'.replace('.', ',')
+                label = f'Status: {status} - {signature_model.plan.name} - {signature_model.plan.days} Dias - R${signature_model.plan.value:.2f}'.replace(
+                    '.', ','
+                )
             except TypeError:
                 label = f'Status: {status} - {signature_model.plan.name} - {signature_model.plan.days} Dias - Plano Teste'
             reply_markup[label] = {
@@ -133,7 +135,9 @@ def init_bot(bot, start):
                 else 'Inativa'
             )
             try:
-                text = f'Status: {status} - {signature_model.plan.name} - {signature_model.plan.days} Dias - R${signature_model.plan.value:.2f}\n\nVencimento do plano: {signature_model.due_date:%d/%m/%Y}\n\nDeseja cancelar essa assinatura?'.replace('.', ',')
+                text = f'Status: {status} - {signature_model.plan.name} - {signature_model.plan.days} Dias - R${signature_model.plan.value:.2f}\n\nVencimento do plano: {signature_model.due_date:%d/%m/%Y}\n\nDeseja cancelar essa assinatura?'.replace(
+                    '.', ','
+                )
             except TypeError:
                 text = f'Status: {status} - {signature_model.plan.name} - {signature_model.plan.days} Dias - Plano Teste\n\nVencimento do plano: {signature_model.due_date:%d/%m/%Y}\n\nDeseja cancelar essa assinatura?'
             bot.send_message(

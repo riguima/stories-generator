@@ -11,6 +11,8 @@ from stories_generator.database import Session
 from stories_generator.models import Chat, Product, Signature, TelegramUser
 from stories_generator.utils import get_today_date
 
+browser = Browser()
+
 feed_messages = {}
 
 
@@ -85,7 +87,6 @@ def init_bot(bot, start):
             bot.delete_message(message.chat.id, generating_message.id)
             start(message)
             return
-        browser = Browser()
         functions = {
             'mercadolivre': browser.get_mercado_livre_product_info,
             'amazon': browser.get_amazon_product_info,
@@ -133,10 +134,10 @@ def init_bot(bot, start):
             old_value = ''
         caption = user_model.text_model.format(
             nome=info['name'],
-            valor_antigo=old_value,
+            valor_antigo=f'~{old_value}~',
             valor=f'R$ {info["value"]:.2f}'.replace('.', ','),
             parcelamento=info['installment'],
-            link=message.text,
+            link=f'[Clique Aqui]({message.text})',
         )
         if not info['installment']:
             caption = caption.replace('\n💳', '')
@@ -145,6 +146,7 @@ def init_bot(bot, start):
                 message.chat.id,
                 open(feed_image_path, 'rb'),
                 caption=caption,
+                parse_mode='MarkdownV2',
             ),
             feed_image_path,
         ]
@@ -197,6 +199,7 @@ def init_bot(bot, start):
             message.chat.id,
             open(feed_messages[message.chat.username][1], 'rb'),
             caption=message.text,
+            parse_mode='MarkdownV2',
         )
         bot.send_message(
             message.chat.id,
@@ -257,6 +260,7 @@ def init_bot(bot, start):
                     caption=feed_messages[
                         callback_query.message.chat.username
                     ][0].caption,
+                    parse_mode='MarkdownV2',
                 )
                 bot.send_message(
                     callback_query.message.chat.id, 'Feed Enviado!'

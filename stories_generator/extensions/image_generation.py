@@ -106,7 +106,10 @@ def init_bot(bot, start):
         website = None
         for w in websites:
             if w in str(response.url):
-                website = w
+                if w in ['magazineluiza', 'magazinevoce']:
+                    website = 'magalu'
+                else:
+                    website = w
                 url = str(response.url)
                 break
         if response.status_code != 200 or url is None or website is None:

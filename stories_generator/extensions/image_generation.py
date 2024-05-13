@@ -162,6 +162,7 @@ def init_bot(bot, start):
                 parcelamento=info['installment'],
                 link=f'[Clique Aqui]({config["DOMAIN"]}/{message.chat.username}/produto/{product.id})',
             )
+            caption = caption.replace('.', '\\.').replace('+', '\\+')
             if not info['installment']:
                 caption = caption.replace('\n💳', '')
             feed_messages[message.chat.username] = [

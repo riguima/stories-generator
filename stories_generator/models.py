@@ -1,7 +1,6 @@
 from datetime import date, datetime, timedelta
 from typing import List, Optional
 
-from pytz import timezone
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 

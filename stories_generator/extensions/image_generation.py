@@ -1,5 +1,6 @@
 import os
 from datetime import datetime, timedelta
+from pathlib import Path
 
 import telebot
 import toml
@@ -16,6 +17,33 @@ from stories_generator.utils import get_today_date
 browser = Browser()
 
 feed_messages = {}
+
+FEED_REPLY_MARKUP = {
+    'Editar Texto': {
+        'callback_data': 'edit_feed_message_caption',
+    },
+    'Insira o Título': {
+        'callback_data': 'edit_feed_product_name',
+    },
+    'Insira o Valor Antigo': {
+        'callback_data': 'edit_feed_old_value',
+    },
+    'Insira o Valor Atual': {
+        'callback_data': 'edit_feed_value',
+    },
+    'Insira o Parcelamento': {
+        'callback_data': 'edit_feed_installment',
+    },
+    'Editar Imagem': {
+        'callback_data': 'edit_feed_image',
+    },
+    'Enviar': {
+        'callback_data': 'send_feed',
+    },
+    'Voltar': {
+        'callback_data': 'delete_message_and_return',
+    },
+}
 
 
 def init_bot(bot, start):
@@ -147,7 +175,7 @@ def init_bot(bot, start):
                 image_url=info['image_url'],
                 url=message.text,
                 website=website,
-                create_datetime=datetime.now() - timedelta(hours=3)
+                create_datetime=datetime.now() - timedelta(hours=3),
             )
             session.add(product)
             session.commit()
@@ -162,7 +190,7 @@ def init_bot(bot, start):
                 valor_antigo=f'~{old_value}~',
                 valor=f'R$ {info["value"]:.2f}'.replace('.', ','),
                 parcelamento=info['installment'],
-                link=f'[Clique Aqui]({config["DOMAIN"]}/{message.chat.username}/produto/{product.id})',
+                link=f'{config["DOMAIN"]}/{message.chat.username}/produto/{product.id}',
             )
             caption = (
                 caption.replace('.', '\\.')
@@ -181,20 +209,13 @@ def init_bot(bot, start):
                     parse_mode='MarkdownV2',
                 ),
                 feed_image_path,
+                info,
+                product.id,
             ]
             bot.send_message(
                 message.chat.id,
                 'Escolha uma opção',
-                reply_markup=quick_markup(
-                    {
-                        'Editar': {
-                            'callback_data': 'edit_feed_message_caption'
-                        },
-                        'Enviar': {'callback_data': 'send_feed'},
-                        'Voltar': {'callback_data': 'return_to_main_menu'},
-                    },
-                    row_width=1,
-                ),
+                reply_markup=quick_markup(FEED_REPLY_MARKUP, row_width=1),
             )
             os.remove(story_image_path)
 
@@ -217,21 +238,158 @@ def init_bot(bot, start):
         bot.send_message(
             message.chat.id,
             'Escolha uma opção',
+            reply_markup=quick_markup(FEED_REPLY_MARKUP, row_width=1),
+        )
+
+    @bot.callback_query_handler(
+        func=lambda c: c.data == 'edit_feed_product_name'
+    )
+    def edit_feed_product_name(callback_query):
+        bot.send_message(
+            callback_query.message.chat.id, 'Envie o Título do Produto'
+        )
+        bot.register_next_step_handler(
+            callback_query.message, on_feed_product_name
+        )
+
+    def on_feed_product_name(message):
+        global feed_messages
+        feed_messages[message.chat.username][2]['name'] = message.text
+        show_feed_message(message)
+
+    @bot.callback_query_handler(func=lambda c: c.data == 'edit_feed_old_value')
+    def edit_feed_old_value(callback_query):
+        bot.send_message(
+            callback_query.message.chat.id, 'Envie o Valor Antigo'
+        )
+        bot.register_next_step_handler(
+            callback_query.message, on_feed_old_value
+        )
+
+    def on_feed_old_value(message):
+        global feed_messages
+        try:
+            feed_messages[message.chat.username][2]['old_value'] = float(
+                message.text.replace(',', '.')
+            )
+        except ValueError:
+            bot.send_message(
+                message.chat.id,
+                'Valor inválido, digite um número como no exemplo: 10,50 ou 19,99',
+            )
+        show_feed_message(message)
+
+    @bot.callback_query_handler(func=lambda c: c.data == 'edit_feed_value')
+    def edit_feed_value(callback_query):
+        bot.send_message(callback_query.message.chat.id, 'Envie o Valor Atual')
+        bot.register_next_step_handler(callback_query.message, on_feed_value)
+
+    def on_feed_value(message):
+        global feed_messages
+        try:
+            feed_messages[message.chat.username][2]['value'] = float(
+                message.text.replace(',', '.')
+            )
+        except ValueError:
+            bot.send_message(
+                message.chat.id,
+                'Valor inválido, digite um número como no exemplo: 10,50 ou 19,99',
+            )
+        show_feed_message(message)
+
+    @bot.callback_query_handler(
+        func=lambda c: c.data == 'edit_feed_installment'
+    )
+    def edit_feed_installment(callback_query):
+        bot.send_message(
+            callback_query.message.chat.id, 'Envie o Parcelamento'
+        )
+        bot.register_next_step_handler(
+            callback_query.message, on_feed_installment
+        )
+
+    def on_feed_installment(message):
+        global feed_messages
+        feed_messages[message.chat.username][2]['installment'] = message.text
+        show_feed_message(message)
+
+    def show_feed_message(message):
+        with Session() as session:
+            query = select(TelegramUser).where(
+                TelegramUser.username == message.chat.username
+            )
+            user_model = session.scalars(query).first()
+            info = feed_messages[message.chat.username][2]
+            try:
+                old_value = f'R$ {info["old_value"]:.2f}'.replace('.', ',')
+            except ValueError:
+                old_value = ''
+            caption = user_model.text_model.format(
+                nome=info['name'],
+                valor_antigo=f'~{old_value}~',
+                valor=f'R$ {info["value"]:.2f}'.replace('.', ','),
+                parcelamento=info['installment'],
+                link=f'{config["DOMAIN"]}/{message.chat.username}/produto/{feed_messages[message.chat.username][3]}',
+            )
+            caption = (
+                caption.replace('.', '\\.')
+                .replace('+', '\\+')
+                .replace(')', '\\)')
+                .replace('(', '\\(')
+                .replace('-', '\\-')
+            )
+            if not info['installment']:
+                caption = caption.replace('\n💳', '')
+            feed_messages[message.chat.username][0] = bot.send_photo(
+                message.chat.id,
+                open(feed_messages[message.chat.username][1], 'rb'),
+                caption=caption,
+                parse_mode='MarkdownV2',
+            )
+            bot.send_message(
+                message.chat.id,
+                'Escolha uma opção',
+                reply_markup=quick_markup(FEED_REPLY_MARKUP, row_width=1),
+            )
+
+    @bot.callback_query_handler(func=lambda c: c.data == 'edit_feed_image')
+    def edit_feed_image(callback_query):
+        bot.send_photo(
+            callback_query.message.chat.id,
+            open(Path('static') / 'send_as_document.png', 'rb'),
+            caption='Envie a imagem como documento',
             reply_markup=quick_markup(
                 {
-                    'Editar': {
-                        'callback_data': 'edit_feed_message_caption',
-                    },
-                    'Enviar': {
-                        'callback_data': 'send_feed',
-                    },
-                    'Voltar': {
-                        'callback_data': 'delete_message_and_return',
-                    },
-                },
-                row_width=1,
+                    'Voltar': {'callback_data': 'delete_message_and_return'},
+                }
             ),
         )
+        bot.register_next_step_handler(callback_query.message, on_feed_image)
+
+    def on_feed_image(message):
+        global feed_messages
+        if message.document:
+            image = bot.get_file(message.document.file_id)
+            valid_extensions = ['jpeg', 'jpg', 'png']
+            if image.file_path.split('.')[-1].lower() not in valid_extensions:
+                bot.send_message(
+                    message.chat.id,
+                    'Imagem inválida, tente novamente',
+                    reply_markup=quick_markup(
+                        {'Voltar': {'callback_data': 'return_to_main_menu'}}
+                    ),
+                )
+                bot.register_next_step_handler(message, on_feed_image)
+                return
+            image_file = bot.download_file(image.file_path)
+            image_path = (
+                Path('static')
+                / f'{image.file_id}.{image.file_path.split(".")[-1]}'
+            )
+            with open(image_path, 'wb') as f:
+                f.write(image_file)
+            feed_messages[message.chat.username][1] = image_path
+            show_feed_message(message)
 
     @bot.callback_query_handler(func=lambda c: c.data == 'send_feed')
     def send_feed(callback_query):

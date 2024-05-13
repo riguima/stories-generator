@@ -167,6 +167,7 @@ def init_bot(bot, start):
                 .replace('+', '\\+')
                 .replace(')', '\\)')
                 .replace('(', '\\(')
+                .replace('-', '\\-')
             )
             if not info['installment']:
                 caption = caption.replace('\n💳', '')

@@ -22,17 +22,11 @@ FEED_REPLY_MARKUP = {
     'Editar Texto': {
         'callback_data': 'edit_feed_message_caption',
     },
-    'Insira o Título': {
-        'callback_data': 'edit_feed_product_name',
+    'Editar Informações': {
+        'callback_data': 'edit_feed_infos',
     },
-    'Insira o Valor Antigo': {
-        'callback_data': 'edit_feed_old_value',
-    },
-    'Insira o Valor Atual': {
-        'callback_data': 'edit_feed_value',
-    },
-    'Insira o Parcelamento': {
-        'callback_data': 'edit_feed_installment',
+    'Inserir Cupom': {
+        'callback_data': 'edit_feed_cupom',
     },
     'Editar Imagem': {
         'callback_data': 'edit_feed_image',
@@ -244,23 +238,9 @@ def init_bot(bot, start):
         )
 
     @bot.callback_query_handler(
-        func=lambda c: c.data == 'edit_feed_product_name'
+        func=lambda c: c.data == 'edit_feed_infos'
     )
-    def edit_feed_product_name(callback_query):
-        bot.send_message(
-            callback_query.message.chat.id, 'Envie o Título do Produto'
-        )
-        bot.register_next_step_handler(
-            callback_query.message, on_feed_product_name
-        )
-
-    def on_feed_product_name(message):
-        global feed_messages
-        feed_messages[message.chat.username][2]['name'] = message.text
-        show_feed_message(message)
-
-    @bot.callback_query_handler(func=lambda c: c.data == 'edit_feed_old_value')
-    def edit_feed_old_value(callback_query):
+    def edit_feed_infos(callback_query):
         bot.send_message(
             callback_query.message.chat.id, 'Envie o Valor Antigo'
         )
@@ -274,17 +254,14 @@ def init_bot(bot, start):
             feed_messages[message.chat.username][2]['old_value'] = float(
                 message.text.replace(',', '.')
             )
+            bot.send_message(callback_query.message.chat.id, 'Envie o Valor Atual')
+            bot.register_next_step_handler(message, on_feed_value)
         except ValueError:
             bot.send_message(
                 message.chat.id,
                 'Valor inválido, digite um número como no exemplo: 10,50 ou 19,99',
             )
-        show_feed_message(message)
-
-    @bot.callback_query_handler(func=lambda c: c.data == 'edit_feed_value')
-    def edit_feed_value(callback_query):
-        bot.send_message(callback_query.message.chat.id, 'Envie o Valor Atual')
-        bot.register_next_step_handler(callback_query.message, on_feed_value)
+            bot.register_next_step_handler(message, on_feed_old_value)
 
     def on_feed_value(message):
         global feed_messages
@@ -292,27 +269,28 @@ def init_bot(bot, start):
             feed_messages[message.chat.username][2]['value'] = float(
                 message.text.replace(',', '.')
             )
+            bot.send_message(message.chat.id, 'Envie o Parcelamento')
+            bot.register_next_step_handler(message, on_feed_installment)
         except ValueError:
             bot.send_message(
                 message.chat.id,
                 'Valor inválido, digite um número como no exemplo: 10,50 ou 19,99',
             )
-        show_feed_message(message)
-
-    @bot.callback_query_handler(
-        func=lambda c: c.data == 'edit_feed_installment'
-    )
-    def edit_feed_installment(callback_query):
-        bot.send_message(
-            callback_query.message.chat.id, 'Envie o Parcelamento'
-        )
-        bot.register_next_step_handler(
-            callback_query.message, on_feed_installment
-        )
+            bot.register_next_step_handler(message, on_feed_value)
 
     def on_feed_installment(message):
         global feed_messages
         feed_messages[message.chat.username][2]['installment'] = message.text
+        show_feed_message(message)
+
+    @bot.callback_query_handler(func=lambda c: c.data == 'edit_feed_cupom')
+    def edit_feed_cupom(callback_query):
+        bot.send_message(callback_query.message.chat.id, 'Envie o Cupom')
+        bot.register_next_step_handler(callback_query.message, on_feed_cupom)
+
+    def on_feed_cupom(message):
+        global feed_messages
+        feed_messages[message.chat.username][2]['cupom'] = message.text
         show_feed_message(message)
 
     def show_feed_message(message):
@@ -340,6 +318,8 @@ def init_bot(bot, start):
                 .replace('(', '\\(')
                 .replace('-', '\\-')
             )
+            if info.get('copum'):
+                caption += f'\n{info["cupom"]}'
             if not info['installment']:
                 caption = caption.replace('\n💳', '')
             feed_messages[message.chat.username][0] = bot.send_photo(

@@ -1,12 +1,11 @@
 import os
-import re
 import textwrap
 from pathlib import Path
+from time import sleep
 from uuid import uuid4
 
 import undetected_chromedriver as uc
 from httpx import get
-from parsel import Selector
 from PIL import Image, ImageDraw, ImageFont
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
@@ -18,87 +17,71 @@ class Browser:
         self.driver = uc.Chrome(headless=True, use_subprocess=False)
 
     def get_amazon_product_info(self, url):
-        response = get(
-            url,
-            headers={
-                'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:15.0) Gecko/20100101 Firefox/15.0.1'
-            },
-            follow_redirects=True,
-        )
-        selector = Selector(response.text)
+        self.driver.get(url)
+        sleep(1)
+        self.driver.refresh()
+        if self.driver.find_elements(By.CSS_SELECTOR, '.best-offer-name'):
+            installment = self.find_element('.best-offer-name').text
+        else:
+            installment = ''
         return {
-            'name': selector.css('#productTitle::text').get().strip(),
+            'name': self.find_element('#productTitle').text.strip(),
             'old_value': float(
-                selector.css('.a-size-small .a-offscreen::text')
-                .get()[2:]
+                self.find_element('.a-size-small .a-offscreen')
+                .text[2:]
                 .replace('.', '')
                 .replace(',', '.')
             ),
             'value': float(
-                selector.css('.a-price-whole::text')
-                .get()
-                .replace('.', '')
+                self.find_element('.a-price-whole::text')
+                .text.replace('.', '')
                 .replace(',', '.')
             ),
-            'installment': selector.css('.best-offer-name::text').get() or '',
-            'image_url': selector.css('#landingImage').attrib[
+            'installment': installment,
+            'image_url': self.find_element('#landingImage').get_attribute(
                 'data-old-hires'
-            ],
+            ),
             'url': url,
         }
 
     def get_mercado_livre_product_info(self, url):
-        response = get(
-            url,
-            headers={
-                'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:15.0) Gecko/20100101 Firefox/15.0.1'
-            },
-            follow_redirects=True,
-        )
-        selector = Selector(response.text)
-        if not selector.css('.ui-pdp-title::text'):
-            response = get(
-                selector.css('.poly-component__title').attrib['href'],
-                headers={
-                    'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:15.0) Gecko/20100101 Firefox/15.0.1'
-                },
-                follow_redirects=True,
+        self.driver.get(url)
+        self.driver.refresh()
+        if not self.driver.find_elements(
+            By.CSS_SELECTOR, '.ui-pdp-title::text'
+        ):
+            self.driver.get(
+                self.find_element('.poly-component__title').get_attribute(
+                    'href'
+                )
             )
-            selector = Selector(response.text)
-        old_value = float(
-            selector.css('.andes-money-amount__fraction::text')
-            .get()
-            .replace('.', '')
-            .replace(',', '.')
-        )
-        value = float(
-            selector.css('.andes-money-amount__fraction::text')[1]
-            .get()
-            .replace('.', '')
-            .replace(',', '.')
-        )
-        if old_value < value:
-            value = old_value
+        if self.driver.find_elements(
+            By.CLASS_NAME, '.ui-pdp-price__original-value'
+        ):
+            old_value = float(
+                self.find_element('.andes-money-amount__fraction')
+                .text.replace('.', '')
+                .replace(',', '.')
+            )
+        else:
             old_value = ''
-        try:
-            installment = [
-                int(v)
-                for v in re.findall(r'>(\d{2})<', response.text)
-                if int(v) <= 12
-            ][0]
-            installment = f'em {installment}x R$ {round(value / installment, 2):.2f} sem juros'.replace(
-                '.', ','
-            )
-        except IndexError:
+        value = float(
+            self.find_element('meta[itemprop=price]').get_attribute('content')
+        )
+        if self.driver.find_elements(
+            By.CSS_SELECTOR, '.pricing_price_subtitle'
+        ):
+            installment = self.find_elements('.pricing_price_subtitle').text
+        else:
             installment = ''
         return {
-            'name': selector.css('.ui-pdp-title::text').get(),
+            'name': self.find_element('.ui-pdp-title').text,
             'old_value': old_value,
             'value': value,
             'installment': installment,
-            'image_url': selector.css(
+            'image_url': self.find_element(
                 '.ui-pdp-image.ui-pdp-gallery__figure__image'
-            ).attrib['src'],
+            ).get_attribute('src'),
             'url': url,
         }
 
@@ -143,7 +126,9 @@ class Browser:
             f.write(response.content)
         product_image = Image.open(filename)
         if product_image.height < 650:
-            product_image = product_image.resize((product_image.width * 2, product_image.height * 2))
+            product_image = product_image.resize(
+                (product_image.width * 2, product_image.height * 2)
+            )
         product_image.thumbnail((900, 650), Image.Resampling.LANCZOS)
         stories_image.paste(
             product_image,

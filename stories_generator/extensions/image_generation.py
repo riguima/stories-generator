@@ -237,9 +237,7 @@ def init_bot(bot, start):
             reply_markup=quick_markup(FEED_REPLY_MARKUP, row_width=1),
         )
 
-    @bot.callback_query_handler(
-        func=lambda c: c.data == 'edit_feed_infos'
-    )
+    @bot.callback_query_handler(func=lambda c: c.data == 'edit_feed_infos')
     def edit_feed_infos(callback_query):
         bot.send_message(
             callback_query.message.chat.id, 'Envie o Valor Antigo'
@@ -254,7 +252,7 @@ def init_bot(bot, start):
             feed_messages[message.chat.username][2]['old_value'] = float(
                 message.text.replace(',', '.')
             )
-            bot.send_message(callback_query.message.chat.id, 'Envie o Valor Atual')
+            bot.send_message(message.chat.id, 'Envie o Valor Atual')
             bot.register_next_step_handler(message, on_feed_value)
         except ValueError:
             bot.send_message(

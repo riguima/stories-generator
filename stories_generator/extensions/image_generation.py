@@ -320,6 +320,16 @@ def init_bot(bot, start):
                 old_value = f'R$ {info["old_value"]:.2f}'.replace('.', ',')
             except ValueError:
                 old_value = ''
+            query = (
+                select(Product)
+                .where(Product.username == message.chat.username)
+                .where(Product.url == message.text)
+            )
+            product = session.scalars(query).first()
+            product.formatted_old_value = old_value
+            product.formatted_value = f'R$ {info["value"]:.2f}'.replace('.', ',')
+            product.installment = info['installment']
+            session.commit()
             caption = user_model.text_model.format(
                 nome=info['name'],
                 valor_antigo=f'~{old_value}~',

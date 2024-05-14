@@ -227,10 +227,18 @@ def init_bot(bot, start):
 
     def on_feed_message(message):
         _, feed_image_path = browser.generate_images(feed_messages[message.chat.username][2], feed_messages[message.chat.username][-1])
+        caption = (
+            message.text.replace('.', '\\.')
+            .replace('+', '\\+')
+            .replace(')', '\\)')
+            .replace('(', '\\(')
+            .replace('-', '\\-')
+            .replace('_', '\\_')
+        )
         feed_messages[message.chat.username][0] = bot.send_photo(
             message.chat.id,
             open(feed_image_path, 'rb'),
-            caption=message.text,
+            caption=caption,
             parse_mode='MarkdownV2',
         )
         bot.send_message(
@@ -242,7 +250,7 @@ def init_bot(bot, start):
     @bot.callback_query_handler(func=lambda c: c.data == 'edit_feed_infos')
     def edit_feed_infos(callback_query):
         bot.send_message(
-            callback_query.message.chat.id, 'Envie o Valor Antigo'
+            callback_query.message.chat.id, 'Envie o Valor Antigo (Digite 0 para pular)'
         )
         bot.register_next_step_handler(
             callback_query.message, on_feed_old_value
@@ -251,10 +259,12 @@ def init_bot(bot, start):
     def on_feed_old_value(message):
         global feed_messages
         try:
-            feed_messages[message.chat.username][2]['old_value'] = float(
-                message.text.replace(',', '.')
-            )
-            bot.send_message(message.chat.id, 'Envie o Valor Atual')
+            old_value = float(message.text.replace(',', '.'))
+            if old_value == 0:
+                feed_messages[message.chat.username][2]['old_value'] = ''
+            else:
+                feed_messages[message.chat.username][2]['old_value'] = old_value
+            bot.send_message(message.chat.id, 'Envie o Valor Atual (Digite 0 para pular)')
             bot.register_next_step_handler(message, on_feed_value)
         except ValueError:
             bot.send_message(
@@ -266,10 +276,12 @@ def init_bot(bot, start):
     def on_feed_value(message):
         global feed_messages
         try:
-            feed_messages[message.chat.username][2]['value'] = float(
-                message.text.replace(',', '.')
-            )
-            bot.send_message(message.chat.id, 'Envie o Parcelamento')
+            value = float(message.text.replace(',', '.'))
+            if value == 0:
+                feed_messages[message.chat.username][2]['value'] = ''
+            else:
+                feed_messages[message.chat.username][2]['value'] = value
+            bot.send_message(message.chat.id, 'Envie o Parcelamento (Digite 0 para pular)')
             bot.register_next_step_handler(message, on_feed_installment)
         except ValueError:
             bot.send_message(
@@ -280,7 +292,10 @@ def init_bot(bot, start):
 
     def on_feed_installment(message):
         global feed_messages
-        feed_messages[message.chat.username][2]['installment'] = message.text
+        if message.text == '0':
+            feed_messages[message.chat.username][2]['installment'] = ''
+        else:
+            feed_messages[message.chat.username][2]['installment'] = message.text
         show_feed_message(message)
 
     @bot.callback_query_handler(func=lambda c: c.data == 'edit_feed_cupom')
@@ -317,6 +332,7 @@ def init_bot(bot, start):
                 .replace(')', '\\)')
                 .replace('(', '\\(')
                 .replace('-', '\\-')
+                .replace('_', '\\_')
             )
             if info.get('cupom'):
                 caption += f'\n🎟️ {info["cupom"]}'

@@ -317,7 +317,7 @@ def init_bot(bot, start):
                 .replace('-', '\\-')
             )
             if info.get('cupom'):
-                caption += f'\n{info["cupom"]}'
+                caption += f'\n🎟️ {info["cupom"]}'
             if not info['installment']:
                 caption = caption.replace('\n💳', '')
             feed_messages[message.chat.username][0] = bot.send_photo(

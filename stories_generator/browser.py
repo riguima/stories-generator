@@ -1,7 +1,6 @@
 import os
 import textwrap
 from pathlib import Path
-from time import sleep
 from uuid import uuid4
 
 import undetected_chromedriver as uc
@@ -18,22 +17,25 @@ class Browser:
 
     def get_amazon_product_info(self, url):
         self.driver.get(url)
-        sleep(1)
         self.driver.refresh()
         if self.driver.find_elements(By.CSS_SELECTOR, '.best-offer-name'):
             installment = self.find_element('.best-offer-name').text
         else:
             installment = ''
-        return {
-            'name': self.find_element('#productTitle').text.strip(),
-            'old_value': float(
-                self.find_element('.a-size-small .a-offscreen')
+        if self.driver.find_elements(By.CSS_SELECTOR, '.a-size-small .a-offscreen'):
+            old_value = float(
+                self.find_element('.a-text-price')
                 .text[2:]
                 .replace('.', '')
                 .replace(',', '.')
-            ),
+            )
+        else:
+            old_value = ''
+        return {
+            'name': self.find_element('#productTitle').text.strip(),
+            'old_value': old_value,
             'value': float(
-                self.find_element('.a-price-whole::text')
+                self.find_element('.a-price-whole')
                 .text.replace('.', '')
                 .replace(',', '.')
             ),
@@ -47,16 +49,14 @@ class Browser:
     def get_mercado_livre_product_info(self, url):
         self.driver.get(url)
         self.driver.refresh()
-        if not self.driver.find_elements(
-            By.CSS_SELECTOR, '.ui-pdp-title::text'
-        ):
+        if not self.driver.find_elements(By.CSS_SELECTOR, '.ui-pdp-title'):
             self.driver.get(
                 self.find_element('.poly-component__title').get_attribute(
                     'href'
                 )
             )
         if self.driver.find_elements(
-            By.CLASS_NAME, '.ui-pdp-price__original-value'
+            By.CSS_SELECTOR, '.ui-pdp-price__original-value'
         ):
             old_value = float(
                 self.find_element('.andes-money-amount__fraction')
@@ -69,9 +69,10 @@ class Browser:
             self.find_element('meta[itemprop=price]').get_attribute('content')
         )
         if self.driver.find_elements(
-            By.CSS_SELECTOR, '.pricing_price_subtitle'
+            By.CSS_SELECTOR, '.ui-pdp-price__subtitles'
         ):
-            installment = self.find_elements('.pricing_price_subtitle').text
+            installment = self.find_element('.ui-pdp-price__subtitles').text
+            installment = installment.replace('\n', ' ').replace(' , ', ',')
         else:
             installment = ''
         return {

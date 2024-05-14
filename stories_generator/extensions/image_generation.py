@@ -28,7 +28,7 @@ FEED_REPLY_MARKUP = {
     'Inserir Cupom': {
         'callback_data': 'edit_feed_cupom',
     },
-    'Editar Imagem': {
+    'Editar Imagem de Fundo': {
         'callback_data': 'edit_feed_image',
     },
     'Enviar': {
@@ -207,6 +207,7 @@ def init_bot(bot, start):
                 feed_image_path,
                 info,
                 product.id,
+                image_path,
             ]
             bot.send_message(
                 message.chat.id,
@@ -225,9 +226,10 @@ def init_bot(bot, start):
         bot.register_next_step_handler(callback_query.message, on_feed_message)
 
     def on_feed_message(message):
+        _, feed_image_path = browser.generate_images(feed_messages[message.chat.username][2], feed_messages[message.chat.username][-1])
         feed_messages[message.chat.username][0] = bot.send_photo(
             message.chat.id,
-            open(feed_messages[message.chat.username][1], 'rb'),
+            open(feed_image_path, 'rb'),
             caption=message.text,
             parse_mode='MarkdownV2',
         )
@@ -320,9 +322,10 @@ def init_bot(bot, start):
                 caption += f'\n🎟️ {info["cupom"]}'
             if not info['installment']:
                 caption = caption.replace('\n💳', '')
+            _, feed_image_path = browser.generate_images(feed_messages[message.chat.username][2], feed_messages[message.chat.username][-1])
             feed_messages[message.chat.username][0] = bot.send_photo(
                 message.chat.id,
-                open(feed_messages[message.chat.username][1], 'rb'),
+                open(feed_image_path, 'rb'),
                 caption=caption,
                 parse_mode='MarkdownV2',
             )
@@ -368,7 +371,7 @@ def init_bot(bot, start):
             )
             with open(image_path, 'wb') as f:
                 f.write(image_file)
-            feed_messages[message.chat.username][1] = image_path
+            feed_messages[message.chat.username][-1] = image_path
             show_feed_message(message)
 
     @bot.callback_query_handler(func=lambda c: c.data == 'send_feed')

@@ -316,7 +316,7 @@ def init_bot(bot, start):
                 .replace('(', '\\(')
                 .replace('-', '\\-')
             )
-            if info.get('copum'):
+            if info.get('cupom'):
                 caption += f'\n{info["cupom"]}'
             if not info['installment']:
                 caption = caption.replace('\n💳', '')

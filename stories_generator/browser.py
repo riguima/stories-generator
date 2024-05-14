@@ -15,7 +15,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 
 class Browser:
     def __init__(self):
-        self.driver = uc.Chrome(headless=False, use_subprocess=False)
+        self.driver = uc.Chrome(headless=True, use_subprocess=False)
 
     def get_amazon_product_info(self, url):
         response = get(
@@ -142,12 +142,14 @@ class Browser:
             response = get(info['image_url'])
             f.write(response.content)
         product_image = Image.open(filename)
-        product_image.thumbnail((900, 600), Image.Resampling.LANCZOS)
+        if product_image.height < 650:
+            product_image = product_image.resize((product_image.width * 2, product_image.height * 2))
+        product_image.thumbnail((900, 650), Image.Resampling.LANCZOS)
         stories_image.paste(
             product_image,
             (
                 stories_image.width // 2 - product_image.width // 2,
-                400 + (500 // 2 - product_image.height // 2),
+                350 + (650 // 2 - product_image.height // 2),
             ),
         )
         bold_font = ImageFont.truetype(

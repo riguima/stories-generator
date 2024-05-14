@@ -1,4 +1,5 @@
 import os
+import re
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -335,10 +336,15 @@ def init_bot(bot, start):
                 .replace('_', '\\_')
             )
             if info.get('cupom'):
-                caption += f'\n🎟️ {info["cupom"]}'
+                caption = re.sub(r'\n\n👉', f'\n🎟️ {info["cupom"]}\n\n', caption)
             if not info['installment']:
                 caption = caption.replace('\n💳', '')
-            _, feed_image_path = browser.generate_images(feed_messages[message.chat.username][2], feed_messages[message.chat.username][-1])
+            story_image_path, feed_image_path = browser.generate_images(feed_messages[message.chat.username][2], feed_messages[message.chat.username][-1])
+            bot.send_photo(
+                message.chat.id,
+                open(story_image_path, 'rb'),
+                caption=f'Story gerado ✨🖼️✨\nLink: {config["DOMAIN"]}/{message.chat.username}/produto/{feed_messages[message.chat.username][-2]}',
+            )
             feed_messages[message.chat.username][0] = bot.send_photo(
                 message.chat.id,
                 open(feed_image_path, 'rb'),

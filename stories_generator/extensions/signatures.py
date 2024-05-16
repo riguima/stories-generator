@@ -50,9 +50,8 @@ def init_bot(bot, start):
         reply_markup = {}
         for signature_model in signatures_models:
             try:
-                label = f'Status: Ativa - {signature_model.plan.name} - {signature_model.plan.days} Dias - R${signature_model.plan.value:.2f}'.replace(
-                    '.', ','
-                )
+                price = f'{signature_model.plan.value:.2f}'.replace('.', ',')
+                label = f'Status: Ativa - {signature_model.plan.name} - {signature_model.plan.days} Dias - R${price}'
             except TypeError:
                 label = f'Status: Ativa - {signature_model.plan.name} - {signature_model.plan.days} Dias - Plano Teste'
             reply_markup[label] = {

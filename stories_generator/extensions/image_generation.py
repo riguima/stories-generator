@@ -195,6 +195,7 @@ def init_bot(bot, start):
                 .replace('(', '\\(')
                 .replace('-', '\\-')
                 .replace('_', '\\_')
+                .replace('|', '\\|')
             )
             if not info['installment']:
                 caption = caption.replace('\n💳', '')
@@ -235,6 +236,7 @@ def init_bot(bot, start):
             .replace('(', '\\(')
             .replace('-', '\\-')
             .replace('_', '\\_')
+            .replace('|', '\\|')
         )
         feed_messages[message.chat.username][0] = bot.send_photo(
             message.chat.id,
@@ -323,7 +325,7 @@ def init_bot(bot, start):
             query = (
                 select(Product)
                 .where(Product.username == message.chat.username)
-                .where(Product.url == message.text)
+                .where(Product.url == info['url'])
             )
             product = session.scalars(query).first()
             product.formatted_old_value = old_value
@@ -344,6 +346,7 @@ def init_bot(bot, start):
                 .replace('(', '\\(')
                 .replace('-', '\\-')
                 .replace('_', '\\_')
+                .replace('|', '\\|')
             )
             if info.get('cupom'):
                 caption = re.sub(r'\n\n👉', f'\n🎟️ {info["cupom"]}\n\n', caption)
@@ -437,15 +440,21 @@ def init_bot(bot, start):
             user = session.scalars(query).first()
             if user.bot_token:
                 user_bot = telebot.TeleBot(user.bot_token)
+                caption = feed_messages[callback_query.message.chat.username][0].caption
+                caption = (
+                    caption.replace('.', '\\.')
+                    .replace('+', '\\+')
+                    .replace(')', '\\)')
+                    .replace('(', '\\(')
+                    .replace('-', '\\-')
+                    .replace('_', '\\_')
+                    .replace('|', '\\|')
+                )
+                _, feed_image_path = browser.generate_images(feed_messages[callback_query.message.chat.username][2], feed_messages[callback_query.message.chat.username][-1])
                 user_bot.send_photo(
                     int(chat.chat_id),
-                    open(
-                        feed_messages[callback_query.message.chat.username][1],
-                        'rb',
-                    ),
-                    caption=feed_messages[
-                        callback_query.message.chat.username
-                    ][0].caption,
+                    open(feed_image_path, 'rb'),
+                    caption=caption,
                     parse_mode='MarkdownV2',
                 )
                 bot.send_message(

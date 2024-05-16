@@ -100,13 +100,31 @@ def show_admin_login(callback_query):
         user_model = session.scalars(query).first()
         bot.send_message(
             callback_query.message.chat.id,
-            f'Link: https://promodegrupo.com/login\n\nLogin: {user_model.username}\nSenha: {user_model.password}',
+            f'Link do Site: https://promodegrupo.com/{callback_query.message.chat.username}\n\nLink: https://promodegrupo.com/login\n\nLogin: {user_model.username}\nSenha: {user_model.password}',
             reply_markup=quick_markup(
                 {
+                    'Trocar Senha': {'callback_data': 'change_admin_password'},
                     'Voltar': {'callback_data': 'return_to_main_menu'},
-                }
+                },
+                row_width=1,
             ),
         )
+
+
+@bot.callback_query_handler(lambda c: c.data == 'change_admin_password')
+def change_admin_password(callback_query):
+    bot.send_message(callback_query.message.chat.id, 'Digite a nova senha')
+    bot.register_next_step_handler(callback_query.message, on_admin_password)
+
+
+def on_admin_password(message):
+    with Session() as session:
+        query = select(User).where(User.username == message.chat.username)
+        user_model = session.scalars(query).first()
+        user_model.password = message.text
+        session.commit()
+        bot.send_message(message.chat.id, 'Senha Alterada!')
+        start(message)
 
 
 @bot.callback_query_handler(func=lambda c: c.data == 'show_subscribers')

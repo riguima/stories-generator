@@ -30,6 +30,18 @@ def init_bot(bot, start):
         with Session() as session:
             options = {}
             options['Buscar Membros'] = {'callback_data': 'search_members'}
+            options['Ver Membros'] = {'callback_data': 'see_members'}
+            options['Voltar'] = {'callback_data': 'return_to_main_menu'}
+            bot.send_message(
+                callback_query.message.chat.id,
+                'Membros',
+                reply_markup=quick_markup(options, row_width=1),
+            )
+
+    @bot.callback_query_handler(func=lambda c: c.data == 'see_members')
+    def show_members(callback_query):
+        with Session() as session:
+            options = {}
             for user_model in session.scalars(select(TelegramUser)).all():
                 options[user_model.username] = {
                     'callback_data': f'show_member:{user_model.username}'
@@ -101,9 +113,8 @@ def init_bot(bot, start):
                 else 'Inativa'
             )
             try:
-                label = f'Status: {status} - {signature_model.plan.name} - {signature_model.plan.days} Dias - R${signature_model.plan.value:.2f}'.replace(
-                    '.', ','
-                )
+                price = f'{signature_model.plan.value:.2f}'.replace('.', ',')
+                label = f'Status: {status} - {signature_model.plan.name} - {signature_model.plan.days} Dias - R${price}'
             except TypeError:
                 label = f'Status: {status} - {signature_model.plan.name} - {signature_model.plan.days} Dias - Plano Teste'
             reply_markup[label] = {
@@ -135,9 +146,8 @@ def init_bot(bot, start):
                 else 'Inativa'
             )
             try:
-                text = f'Status: {status} - {signature_model.plan.name} - {signature_model.plan.days} Dias - R${signature_model.plan.value:.2f}\n\nVencimento do plano: {signature_model.due_date:%d/%m/%Y}\n\nDeseja cancelar essa assinatura?'.replace(
-                    '.', ','
-                )
+                price = f'{signature_model.plan.value:.2f}'.replace('.', ',')
+                text = f'Status: {status} - {signature_model.plan.name} - {signature_model.plan.days} Dias - R${price}\n\nVencimento do plano: {signature_model.due_date:%d/%m/%Y}\n\nDeseja cancelar essa assinatura?'
             except TypeError:
                 text = f'Status: {status} - {signature_model.plan.name} - {signature_model.plan.days} Dias - Plano Teste\n\nVencimento do plano: {signature_model.due_date:%d/%m/%Y}\n\nDeseja cancelar essa assinatura?'
             bot.send_message(

@@ -22,7 +22,7 @@ class Browser:
             installment = self.find_element('.best-offer-name').text
         else:
             installment = ''
-        if self.driver.find_elements(By.CSS_SELECTOR, '.a-size-small .a-offscreen'):
+        if self.driver.find_elements(By.CSS_SELECTOR, '.a-text-price'):
             old_value = float(
                 self.find_element('.a-text-price')
                 .text[2:]

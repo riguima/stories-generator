@@ -27,10 +27,6 @@ def init_bot(bot, start):
     def image(callback_query):
         show_websites_menu(callback_query.message, 'upload_image')
 
-    @bot.callback_query_handler(func=lambda c: c.data == 'text_model')
-    def text_model(callback_query):
-        show_websites_menu(callback_query.message, 'edit_text_model')
-
     def show_websites_menu(message, action):
         bot.send_message(
             message.chat.id,
@@ -131,7 +127,7 @@ def init_bot(bot, start):
                 message, lambda m: on_image(m, website)
             )
 
-    @bot.callback_query_handler(func=lambda c: 'edit_text_model:' in c.data)
+    @bot.callback_query_handler(func=lambda c: c.data == 'text_model')
     def edit_text_model(callback_query):
         bot.send_message(
             callback_query.message.chat.id,

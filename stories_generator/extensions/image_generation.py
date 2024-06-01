@@ -93,9 +93,9 @@ def init_bot(bot, start):
         response = get(message.text, follow_redirects=True)
         websites = [
             'mercadolivre',
-            'amazon',
             'magazineluiza',
             'magazinevoce',
+            'amazon',
         ]
         url = None
         website = None
@@ -196,6 +196,8 @@ def init_bot(bot, start):
                 .replace('-', '\\-')
                 .replace('_', '\\_')
                 .replace('|', '\\|')
+                .replace('*', '\\*')
+                .replace('!', '\\!')
             )
             if not info['installment']:
                 caption = caption.replace('\n💳', '')
@@ -237,6 +239,8 @@ def init_bot(bot, start):
             .replace('-', '\\-')
             .replace('_', '\\_')
             .replace('|', '\\|')
+            .replace('*', '\\*')
+            .replace('!', '\\!')
         )
         feed_messages[message.chat.username][0] = bot.send_photo(
             message.chat.id,
@@ -347,6 +351,8 @@ def init_bot(bot, start):
                 .replace('-', '\\-')
                 .replace('_', '\\_')
                 .replace('|', '\\|')
+                .replace('*', '\\*')
+                .replace('!', '\\!')
             )
             if info.get('cupom'):
                 caption = re.sub(r'\n\n👉', f'\n🎟️ {info["cupom"]}\n\n', caption)
@@ -437,10 +443,27 @@ def init_bot(bot, start):
             query = select(TelegramUser).where(
                 TelegramUser.username == callback_query.message.chat.username
             )
-            user = session.scalars(query).first()
-            if user.bot_token:
-                user_bot = telebot.TeleBot(user.bot_token)
-                caption = feed_messages[callback_query.message.chat.username][0].caption
+            user_model = session.scalars(query).first()
+            if user_model.bot_token:
+                user_bot = telebot.TeleBot(user_model.bot_token)
+                info = feed_messages[callback_query.message.chat.username][2]
+                try:
+                    old_value = f'R$ {info["old_value"]:.2f}'.replace('.', ',')
+                except ValueError:
+                    old_value = ''
+                query = (
+                    select(Product)
+                    .where(Product.username == callback_query.message.chat.username)
+                    .where(Product.url == info['url'])
+                )
+                product = session.scalars(query).first()
+                caption = user_model.text_model.format(
+                    nome=info['name'],
+                    valor_antigo=f'~{old_value}~',
+                    valor=f'R$ {info["value"]:.2f}'.replace('.', ','),
+                    parcelamento=info['installment'],
+                    link=f'{config["DOMAIN"]}/{callback_query.message.chat.username}/produto/{product.id}',
+                )
                 caption = (
                     caption.replace('.', '\\.')
                     .replace('+', '\\+')
@@ -449,7 +472,11 @@ def init_bot(bot, start):
                     .replace('-', '\\-')
                     .replace('_', '\\_')
                     .replace('|', '\\|')
+                    .replace('*', '\\*')
+                    .replace('!', '\\!')
                 )
+                if not info['installment']:
+                    caption = caption.replace('\n💳', '')
                 _, feed_image_path = browser.generate_images(feed_messages[callback_query.message.chat.username][2], feed_messages[callback_query.message.chat.username][-1])
                 user_bot.send_photo(
                     int(chat.chat_id),

@@ -2,6 +2,7 @@ import os
 import textwrap
 from pathlib import Path
 from uuid import uuid4
+from time import sleep
 
 import undetected_chromedriver as uc
 from httpx import get
@@ -17,7 +18,10 @@ class Browser:
 
     def get_amazon_product_info(self, url):
         self.driver.get(url)
+        sleep(1)
         self.driver.refresh()
+        #if self.driver.find_elements(By.CSS_SELECTOR, '.aod-close-button'):
+        #    self.find_element('.aod-close-button').click()
         if self.driver.find_elements(By.CSS_SELECTOR, '.best-offer-name'):
             installment = self.find_element('.best-offer-name').text
         else:
@@ -31,18 +35,15 @@ class Browser:
             )
         else:
             old_value = ''
+        image_url = self.find_element('#landingImage').get_attribute('data-old-hires')
+        if not image_url:
+            image_url = self.find_element('#landingImage').get_attribute('src')
         return {
             'name': self.find_element('#productTitle').text.strip(),
             'old_value': old_value,
-            'value': float(
-                self.find_element('.a-price-whole')
-                .text.replace('.', '')
-                .replace(',', '.')
-            ),
+            'value': float(self.find_element('.a-price-whole').text.replace('.', '').replace(',', '.')),
             'installment': installment,
-            'image_url': self.find_element('#landingImage').get_attribute(
-                'data-old-hires'
-            ),
+            'image_url': image_url,
             'url': url,
         }
 

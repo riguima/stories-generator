@@ -28,18 +28,18 @@ def init_bot(bot, start):
     @bot.callback_query_handler(func=lambda c: c.data == 'show_members')
     def show_members(callback_query):
         with Session() as session:
-            options = {}
-            options['Buscar Membros'] = {'callback_data': 'search_members'}
-            options['Ver Membros'] = {'callback_data': 'see_members'}
-            options['Voltar'] = {'callback_data': 'return_to_main_menu'}
             bot.send_message(
                 callback_query.message.chat.id,
                 'Membros',
-                reply_markup=quick_markup(options, row_width=1),
+                reply_markup=quick_markup({
+                    'Buscar Membros': {'callback_data': 'search_members'},
+                    'Ver Membros': {'callback_data': 'see_members'},
+                    'Voltar': {'callback_data': 'return_to_main_menu'},
+                }, row_width=1),
             )
 
     @bot.callback_query_handler(func=lambda c: c.data == 'see_members')
-    def show_members(callback_query):
+    def see_members(callback_query):
         with Session() as session:
             options = {}
             for user_model in session.scalars(select(TelegramUser)).all():

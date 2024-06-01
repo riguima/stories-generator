@@ -230,7 +230,10 @@ def init_bot(bot, start):
         bot.register_next_step_handler(callback_query.message, on_feed_message)
 
     def on_feed_message(message):
-        _, feed_image_path = browser.generate_images(feed_messages[message.chat.username][2], feed_messages[message.chat.username][-1])
+        _, feed_image_path = browser.generate_images(
+            feed_messages[message.chat.username][2],
+            feed_messages[message.chat.username][-1],
+        )
         caption = (
             message.text.replace('.', '\\.')
             .replace('+', '\\+')
@@ -257,7 +260,8 @@ def init_bot(bot, start):
     @bot.callback_query_handler(func=lambda c: c.data == 'edit_feed_infos')
     def edit_feed_infos(callback_query):
         bot.send_message(
-            callback_query.message.chat.id, 'Envie o Valor Antigo (Digite 0 para pular)'
+            callback_query.message.chat.id,
+            'Envie o Valor Antigo (Digite 0 para pular)',
         )
         bot.register_next_step_handler(
             callback_query.message, on_feed_old_value
@@ -270,8 +274,12 @@ def init_bot(bot, start):
             if old_value == 0:
                 feed_messages[message.chat.username][2]['old_value'] = ''
             else:
-                feed_messages[message.chat.username][2]['old_value'] = old_value
-            bot.send_message(message.chat.id, 'Envie o Valor Atual (Digite 0 para pular)')
+                feed_messages[message.chat.username][2][
+                    'old_value'
+                ] = old_value
+            bot.send_message(
+                message.chat.id, 'Envie o Valor Atual (Digite 0 para pular)'
+            )
             bot.register_next_step_handler(message, on_feed_value)
         except ValueError:
             bot.send_message(
@@ -288,7 +296,9 @@ def init_bot(bot, start):
                 feed_messages[message.chat.username][2]['value'] = ''
             else:
                 feed_messages[message.chat.username][2]['value'] = value
-            bot.send_message(message.chat.id, 'Envie o Parcelamento (Digite 0 para pular)')
+            bot.send_message(
+                message.chat.id, 'Envie o Parcelamento (Digite 0 para pular)'
+            )
             bot.register_next_step_handler(message, on_feed_installment)
         except ValueError:
             bot.send_message(
@@ -302,7 +312,9 @@ def init_bot(bot, start):
         if message.text == '0':
             feed_messages[message.chat.username][2]['installment'] = ''
         else:
-            feed_messages[message.chat.username][2]['installment'] = message.text
+            feed_messages[message.chat.username][2][
+                'installment'
+            ] = message.text
         show_feed_message(message)
 
     @bot.callback_query_handler(func=lambda c: c.data == 'edit_feed_cupom')
@@ -333,7 +345,9 @@ def init_bot(bot, start):
             )
             product = session.scalars(query).first()
             product.formatted_old_value = old_value
-            product.formatted_value = f'R$ {info["value"]:.2f}'.replace('.', ',')
+            product.formatted_value = f'R$ {info["value"]:.2f}'.replace(
+                '.', ','
+            )
             product.installment = info['installment']
             session.commit()
             caption = user_model.text_model.format(
@@ -355,10 +369,15 @@ def init_bot(bot, start):
                 .replace('!', '\\!')
             )
             if info.get('cupom'):
-                caption = re.sub(r'\n\n👉', f'\n🎟️ {info["cupom"]}\n\n', caption)
+                caption = re.sub(
+                    r'\n\n👉', f'\n🎟️ {info["cupom"]}\n\n', caption
+                )
             if not info['installment']:
                 caption = caption.replace('\n💳', '')
-            story_image_path, feed_image_path = browser.generate_images(feed_messages[message.chat.username][2], feed_messages[message.chat.username][-1])
+            story_image_path, feed_image_path = browser.generate_images(
+                feed_messages[message.chat.username][2],
+                feed_messages[message.chat.username][-1],
+            )
             bot.send_photo(
                 message.chat.id,
                 open(story_image_path, 'rb'),
@@ -453,7 +472,10 @@ def init_bot(bot, start):
                     old_value = ''
                 query = (
                     select(Product)
-                    .where(Product.username == callback_query.message.chat.username)
+                    .where(
+                        Product.username
+                        == callback_query.message.chat.username
+                    )
                     .where(Product.url == info['url'])
                 )
                 product = session.scalars(query).first()
@@ -477,7 +499,10 @@ def init_bot(bot, start):
                 )
                 if not info['installment']:
                     caption = caption.replace('\n💳', '')
-                _, feed_image_path = browser.generate_images(feed_messages[callback_query.message.chat.username][2], feed_messages[callback_query.message.chat.username][-1])
+                _, feed_image_path = browser.generate_images(
+                    feed_messages[callback_query.message.chat.username][2],
+                    feed_messages[callback_query.message.chat.username][-1],
+                )
                 user_bot.send_photo(
                     int(chat.chat_id),
                     open(feed_image_path, 'rb'),

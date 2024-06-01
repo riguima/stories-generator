@@ -54,6 +54,7 @@ class User(Base):
 class TelegramUser(Base):
     __tablename__ = 'telegram_users'
     id: Mapped[int] = mapped_column(primary_key=True)
+    chat_id: Mapped[Optional[str]]
     username: Mapped[str]
     bot_token: Mapped[Optional[str]]
     mercado_livre_image: Mapped[Optional[str]] = mapped_column(

@@ -25,6 +25,9 @@ def init_bot(bot, start):
                 TelegramUser.username == username
             )
             user_model = session.scalars(query).first()
+            if user_model.chat_id is None:
+                user_model.chat_id = str(callback_query.message.chat.id)
+                session.commit()
             query = (
                 select(Signature)
                 .where(Signature.due_date > get_today_date())

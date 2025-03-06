@@ -221,6 +221,8 @@ def init_bot(bot, start):
                 )
                 session.add(signature_model)
                 session.commit()
+                if user_model.chat_id:
+                    bot.send_message(int(user_model.chat_id), f'Olá, {user_model.username}.\n\nAdicionado {int(message.text)} dias para o plano {plan_model.name}.\n\nDigite /start e clique em "Minhas assinaturas" para ter acesso a nova senha.')
             bot.send_message(message.chat.id, 'Plano Adicionado!')
         except ValueError:
             bot.send_message(
@@ -252,10 +254,11 @@ def init_bot(bot, start):
                 member = session.scalars(query).first()
                 for for_send_message in for_send_messages:
                     try:
-                        bot.send_message(
-                            str(member.chat_id),
-                            for_send_message.text.format(nome=username),
-                        )
+                        if member.chat_id:
+                            bot.send_message(
+                                str(member.chat_id),
+                                for_send_message.text.format(nome=username),
+                            )
                     except ApiTelegramException:
                         continue
             bot.delete_message(message.chat.id, sending_message.id)

@@ -18,10 +18,8 @@ class Browser:
 
     def get_amazon_product_info(self, url):
         self.driver.get(url)
-        sleep(1)
+        sleep(2)
         self.driver.refresh()
-        # if self.driver.find_elements(By.CSS_SELECTOR, '.aod-close-button'):
-        #    self.find_element('.aod-close-button').click()
         if self.driver.find_elements(By.CSS_SELECTOR, '.best-offer-name'):
             installment = self.find_element('.best-offer-name').text
         else:

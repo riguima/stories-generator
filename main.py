@@ -18,6 +18,8 @@ from stories_generator.utils import get_plans_reply_markup, get_today_date
 
 bot = telebot.TeleBot(config['BOT_TOKEN'])
 
+messages_for_send = []
+
 
 @bot.message_handler(commands=['start', 'help', 'menu'])
 def start(message):
@@ -50,7 +52,7 @@ def start(message):
                 session.add(telegram_user_model)
                 session.flush()
                 signature_model = Signature(
-                    user_id=user_model.id,
+                    user_id=telegram_user_model.id,
                     plan_id=plan_model.id,
                     due_date=get_today_date()
                     + timedelta(days=plan_model.days),
@@ -219,6 +221,8 @@ def on_background_image(message):
 
 @bot.callback_query_handler(func=lambda c: c.data == 'send_message')
 def send_message(callback_query):
+    global messages_for_send
+    messages_for_send = []
     bot.send_message(
         callback_query.message.chat.id,
         'Escolha uma opção',
@@ -252,28 +256,29 @@ def send_message_for_all_members(callback_query):
     )
 
 
-def on_message_for_all_members(message, for_send_messages=[]):
+def on_message_for_all_members(message):
     if message.text == '/stop':
         sending_message = bot.send_message(
             message.chat.id, 'Enviando Mensagens...'
         )
         with Session() as session:
             for member in session.scalars(select(TelegramUser)).all():
-                for for_send_message in for_send_messages:
+                for message_for_send in messages_for_send:
                     try:
-                        bot.send_message(
-                            int(member.chat_id),
-                            for_send_message.text.format(nome=member.username),
-                        )
+                        if member.chat_id:
+                            bot.send_message(
+                                int(member.chat_id),
+                                message_for_send.text.format(nome=member.username),
+                            )
                     except ApiTelegramException:
                         continue
         bot.delete_message(message.chat.id, sending_message.id)
         bot.send_message(message.chat.id, 'Mensagens Enviadas!')
         start(message)
     else:
-        for_send_messages.append(message)
+        messages_for_send.append(message)
         bot.register_next_step_handler(
-            message, lambda m: on_message_for_all_members(m, for_send_messages)
+            message, on_message_for_all_members
         )
 
 
@@ -290,7 +295,7 @@ def send_message_for_subscribers(callback_query):
     )
 
 
-def on_message_for_subscribers(message, for_send_messages=[]):
+def on_message_for_subscribers(message):
     if message.text == '/stop':
         sending_message = bot.send_message(
             message.chat.id, 'Enviando Mensagens...'
@@ -303,23 +308,24 @@ def on_message_for_subscribers(message, for_send_messages=[]):
                     .where(Signature.due_date >= get_today_date())
                 )
                 if session.scalars(query).all():
-                    for for_send_message in for_send_messages:
+                    for message_for_send in messages_for_send:
                         try:
-                            bot.send_message(
-                                int(member.chat_id),
-                                for_send_message.text.format(
-                                    nome=member.username
-                                ),
-                            )
+                            if member.chat_id:
+                                bot.send_message(
+                                    int(member.chat_id),
+                                    message_for_send.text.format(
+                                        nome=member.username
+                                    ),
+                                )
                         except ApiTelegramException:
                             continue
         bot.delete_message(message.chat.id, sending_message.id)
         bot.send_message(message.chat.id, 'Mensagens Enviadas!')
         start(message)
     else:
-        for_send_messages.append(message)
+        messages_for_send.append(message)
         bot.register_next_step_handler(
-            message, lambda m: on_message_for_subscribers(m, for_send_messages)
+            message, on_message_for_subscribers
         )
 
 
@@ -352,7 +358,7 @@ def send_message_for_plan_members_action(callback_query):
     )
 
 
-def on_message_for_plan_members(message, plan_id, for_send_messages=[]):
+def on_message_for_plan_members(message, plan_id):
     if message.text == '/stop':
         sending_message = bot.send_message(
             message.chat.id, 'Enviando Mensagens...'
@@ -366,25 +372,26 @@ def on_message_for_plan_members(message, plan_id, for_send_messages=[]):
                     .where(Signature.due_date >= get_today_date())
                 )
                 if session.scalars(query).all():
-                    for for_send_message in for_send_messages:
+                    for message_for_send in messages_for_send:
                         try:
-                            bot.send_message(
-                                int(member.chat_id),
-                                for_send_message.text.format(
-                                    nome=member.username
-                                ),
-                            )
+                            if member.chat_id:
+                                bot.send_message(
+                                    int(member.chat_id),
+                                    message_for_send.text.format(
+                                        nome=member.username
+                                    ),
+                                )
                         except ApiTelegramException:
                             continue
         bot.delete_message(message.chat.id, sending_message.id)
         bot.send_message(message.chat.id, 'Mensagens Enviadas!')
         start(message)
     else:
-        for_send_messages.append(message)
+        messages_for_send.append(message)
         bot.register_next_step_handler(
             message,
             lambda m: on_message_for_plan_members(
-                m, plan_id, for_send_messages
+                m, plan_id
             ),
         )
 

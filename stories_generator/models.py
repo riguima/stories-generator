@@ -60,14 +60,13 @@ class TelegramUser(Base):
     mercado_livre_image: Mapped[Optional[str]] = mapped_column(
         default='static/background.png'
     )
-    magalu_image: Mapped[Optional[str]] = mapped_column(
-        default='static/background.png'
-    )
-    amazon_image: Mapped[Optional[str]] = mapped_column(
-        default='static/background.png'
-    )
+    magalu_image: Mapped[Optional[str]] = mapped_column(default='static/background.png')
+    amazon_image: Mapped[Optional[str]] = mapped_column(default='static/background.png')
     text_model: Mapped[Optional[str]] = mapped_column(
-        default='🔥{nome}\n\n{valor_antigo}\n💸{valor}\n💳 {parcelamento}\n\n👉Link p/ comprar: {link}'
+        default=(
+            '🔥{nome}\n\n{valor_antigo}\n💸{valor}\n💳 {parcelamento}\n\n'
+            '👉Link p/ comprar: {link}'
+        )
     )
     chats: Mapped[List['Chat']] = relationship(
         back_populates='user', cascade='all,delete-orphan'

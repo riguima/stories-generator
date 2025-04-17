@@ -54,8 +54,7 @@ def start(message):
                 signature_model = Signature(
                     user_id=telegram_user_model.id,
                     plan_id=plan_model.id,
-                    due_date=get_today_date()
-                    + timedelta(days=plan_model.days),
+                    due_date=get_today_date() + timedelta(days=plan_model.days),
                 )
                 session.add(signature_model)
                 session.commit()
@@ -73,16 +72,10 @@ def start(message):
         }
         if message.chat.id in config['ADMINS']:
             options['Enviar Mensagem'] = {'callback_data': 'send_message'}
-            options['Alterar Plano Teste'] = {
-                'callback_data': 'edit_test_plan'
-            }
+            options['Alterar Plano Teste'] = {'callback_data': 'edit_test_plan'}
             options['Assinantes'] = {'callback_data': 'show_subscribers'}
-            options['Editar Mensagem do Menu'] = {
-                'callback_data': 'edit_menu_message'
-            }
-            options['Editar Imagem Padrão'] = {
-                'callback_data': 'edit_background_image'
-            }
+            options['Editar Mensagem do Menu'] = {'callback_data': 'edit_menu_message'}
+            options['Editar Imagem Padrão'] = {'callback_data': 'edit_background_image'}
             options['Adicionar Plano'] = {'callback_data': 'add_plan'}
             options['Planos'] = {'callback_data': 'show_plans'}
             options['Adicionar Membro'] = {'callback_data': 'add_member'}
@@ -154,9 +147,7 @@ def show_subscribers(callback_query):
                     if signature_model.plan.name in plans:
                         pattern = signature_model.plan.name + r': \d+'
                         actives_in_plan = int(
-                            re.findall(
-                                signature_model.plan.name + r': (\d+)', plans
-                            )[0]
+                            re.findall(signature_model.plan.name + r': (\d+)', plans)[0]
                         )
                         plans = re.sub(
                             pattern,
@@ -168,9 +159,9 @@ def show_subscribers(callback_query):
         bot.send_message(
             callback_query.message.chat.id,
             f'Número de Usuários: {len(users)}\nAtivos: {actives}\nInativos: {len(users) - actives}\n{plans}',
-            reply_markup=quick_markup(
-                {'Voltar': {'callback_data': 'return_to_main_menu'}}
-            ),
+            reply_markup=quick_markup({
+                'Voltar': {'callback_data': 'return_to_main_menu'}
+            }),
         )
 
 
@@ -193,9 +184,7 @@ def on_menu_message(message):
 
 @bot.callback_query_handler(func=lambda c: c.data == 'edit_background_image')
 def edit_background_image(callback_query):
-    bot.send_message(
-        callback_query.message.chat.id, 'Envie a nova imagem de fundo'
-    )
+    bot.send_message(callback_query.message.chat.id, 'Envie a nova imagem de fundo')
     bot.register_next_step_handler(callback_query.message, on_background_image)
 
 
@@ -204,9 +193,7 @@ def on_background_image(message):
         image = bot.get_file(message.document.file_id)
         valid_extensions = ['jpeg', 'jpg', 'png']
         if image.file_path.split('.')[-1].lower() not in valid_extensions:
-            bot.send_message(
-                message.chat.id, 'Imagem inválida, tente novamente'
-            )
+            bot.send_message(message.chat.id, 'Imagem inválida, tente novamente')
             bot.register_next_step_handler(message, on_background_image)
             return
         image_file = bot.download_file(image.file_path)
@@ -243,24 +230,18 @@ def send_message(callback_query):
     )
 
 
-@bot.callback_query_handler(
-    func=lambda c: c.data == 'send_message_for_all_members'
-)
+@bot.callback_query_handler(func=lambda c: c.data == 'send_message_for_all_members')
 def send_message_for_all_members(callback_query):
     bot.send_message(
         callback_query.message.chat.id,
         'Envie as mensagens que deseja enviar para todos os membros, utilize as tags: {nome}, digite /stop para parar',
     )
-    bot.register_next_step_handler(
-        callback_query.message, on_message_for_all_members
-    )
+    bot.register_next_step_handler(callback_query.message, on_message_for_all_members)
 
 
 def on_message_for_all_members(message):
     if message.text == '/stop':
-        sending_message = bot.send_message(
-            message.chat.id, 'Enviando Mensagens...'
-        )
+        sending_message = bot.send_message(message.chat.id, 'Enviando Mensagens...')
         with Session() as session:
             for member in session.scalars(select(TelegramUser)).all():
                 for message_for_send in messages_for_send:
@@ -277,29 +258,21 @@ def on_message_for_all_members(message):
         start(message)
     else:
         messages_for_send.append(message)
-        bot.register_next_step_handler(
-            message, on_message_for_all_members
-        )
+        bot.register_next_step_handler(message, on_message_for_all_members)
 
 
-@bot.callback_query_handler(
-    func=lambda c: c.data == 'send_message_for_subscribers'
-)
+@bot.callback_query_handler(func=lambda c: c.data == 'send_message_for_subscribers')
 def send_message_for_subscribers(callback_query):
     bot.send_message(
         callback_query.message.chat.id,
         'Envie as mensagens que deseja enviar para todos os membros ativos, utilize as tags: {nome}, digite /stop para parar',
     )
-    bot.register_next_step_handler(
-        callback_query.message, on_message_for_subscribers
-    )
+    bot.register_next_step_handler(callback_query.message, on_message_for_subscribers)
 
 
 def on_message_for_subscribers(message):
     if message.text == '/stop':
-        sending_message = bot.send_message(
-            message.chat.id, 'Enviando Mensagens...'
-        )
+        sending_message = bot.send_message(message.chat.id, 'Enviando Mensagens...')
         with Session() as session:
             for member in session.scalars(select(TelegramUser)).all():
                 query = (
@@ -313,9 +286,7 @@ def on_message_for_subscribers(message):
                             if member.chat_id:
                                 bot.send_message(
                                     int(member.chat_id),
-                                    message_for_send.text.format(
-                                        nome=member.username
-                                    ),
+                                    message_for_send.text.format(nome=member.username),
                                 )
                         except ApiTelegramException:
                             continue
@@ -324,14 +295,10 @@ def on_message_for_subscribers(message):
         start(message)
     else:
         messages_for_send.append(message)
-        bot.register_next_step_handler(
-            message, on_message_for_subscribers
-        )
+        bot.register_next_step_handler(message, on_message_for_subscribers)
 
 
-@bot.callback_query_handler(
-    func=lambda c: c.data == 'send_message_for_plan_members'
-)
+@bot.callback_query_handler(func=lambda c: c.data == 'send_message_for_plan_members')
 def send_message_for_plan_members(callback_query):
     bot.send_message(
         callback_query.message.chat.id,
@@ -343,9 +310,7 @@ def send_message_for_plan_members(callback_query):
     )
 
 
-@bot.callback_query_handler(
-    func=lambda c: 'send_message_for_plan_members:' in c.data
-)
+@bot.callback_query_handler(func=lambda c: 'send_message_for_plan_members:' in c.data)
 def send_message_for_plan_members_action(callback_query):
     plan_id = int(callback_query.data.split(':')[-1])
     bot.send_message(
@@ -360,9 +325,7 @@ def send_message_for_plan_members_action(callback_query):
 
 def on_message_for_plan_members(message, plan_id):
     if message.text == '/stop':
-        sending_message = bot.send_message(
-            message.chat.id, 'Enviando Mensagens...'
-        )
+        sending_message = bot.send_message(message.chat.id, 'Enviando Mensagens...')
         with Session() as session:
             for member in session.scalars(select(TelegramUser)).all():
                 query = (
@@ -377,9 +340,7 @@ def on_message_for_plan_members(message, plan_id):
                             if member.chat_id:
                                 bot.send_message(
                                     int(member.chat_id),
-                                    message_for_send.text.format(
-                                        nome=member.username
-                                    ),
+                                    message_for_send.text.format(nome=member.username),
                                 )
                         except ApiTelegramException:
                             continue
@@ -390,9 +351,7 @@ def on_message_for_plan_members(message, plan_id):
         messages_for_send.append(message)
         bot.register_next_step_handler(
             message,
-            lambda m: on_message_for_plan_members(
-                m, plan_id
-            ),
+            lambda m: on_message_for_plan_members(m, plan_id),
         )
 
 

@@ -13,11 +13,12 @@ def init_bot(bot, start):
     def edit_test_plan(callback_query):
         bot.send_message(
             callback_query.message.chat.id,
-            'Digite quantos dias vai ter o plano teste (digite 0 para desativar o plano)',
+            (
+                'Digite quantos dias vai ter o plano teste '
+                '(digite 0 para desativar o plano)'
+            ),
         )
-        bot.register_next_step_handler(
-            callback_query.message, on_test_plan_days
-        )
+        bot.register_next_step_handler(callback_query.message, on_test_plan_days)
 
     def on_test_plan_days(message):
         try:
@@ -26,9 +27,8 @@ def init_bot(bot, start):
                 plan = session.scalars(query).first()
                 plan.days = int(message.text)
                 for signature_model in plan.signatures:
-                    signature_model.due_date = (
-                        signature_model.create_date
-                        + timedelta(int(message.text))
+                    signature_model.due_date = signature_model.create_date + timedelta(
+                        int(message.text)
                     )
                 session.commit()
                 bot.send_message(message.chat.id, 'Plano Teste Alterado!')
@@ -40,9 +40,7 @@ def init_bot(bot, start):
 
     @bot.callback_query_handler(func=lambda c: c.data == 'add_plan')
     def add_plan(callback_query):
-        bot.send_message(
-            callback_query.message.chat.id, 'Digite nome para o plano'
-        )
+        bot.send_message(callback_query.message.chat.id, 'Digite nome para o plano')
         bot.register_next_step_handler(callback_query.message, on_plan_name)
 
     def on_plan_name(message):
@@ -54,9 +52,7 @@ def init_bot(bot, start):
     def on_plan_value(message, plan_name):
         try:
             plan_value = float(message.text.replace(',', '.'))
-            bot.send_message(
-                message.chat.id, 'Digite a quantidade de dias do plano'
-            )
+            bot.send_message(message.chat.id, 'Digite a quantidade de dias do plano')
             bot.register_next_step_handler(
                 message,
                 lambda m: on_plan_days(m, plan_name, plan_value),
@@ -91,9 +87,7 @@ def init_bot(bot, start):
         bot.send_message(
             callback_query.message.chat.id,
             'Planos',
-            reply_markup=quick_markup(
-                get_plans_reply_markup('show_plan'), row_width=1
-            ),
+            reply_markup=quick_markup(get_plans_reply_markup('show_plan'), row_width=1),
         )
 
     @bot.callback_query_handler(func=lambda c: 'show_plan:' in c.data)
@@ -105,9 +99,7 @@ def init_bot(bot, start):
             reply_markup=quick_markup(
                 {
                     'Editar Plano': {'callback_data': f'edit_plan:{plan_id}'},
-                    'Remover Plano': {
-                        'callback_data': f'remove_plan:{plan_id}'
-                    },
+                    'Remover Plano': {'callback_data': f'remove_plan:{plan_id}'},
                     'Voltar': {'callback_data': 'return_to_main_menu'},
                 },
                 row_width=1,
@@ -127,9 +119,7 @@ def init_bot(bot, start):
     @bot.callback_query_handler(func=lambda c: 'edit_plan:' in c.data)
     def edit_plan(callback_query):
         plan_id = int(callback_query.data.split(':')[-1])
-        bot.send_message(
-            callback_query.message.chat.id, 'Digite o nome para o plano'
-        )
+        bot.send_message(callback_query.message.chat.id, 'Digite o nome para o plano')
         bot.register_next_step_handler(
             callback_query.message,
             lambda m: on_edit_plan_name(m, plan_id),

@@ -33,9 +33,7 @@ class Browser:
             )
         else:
             old_value = ''
-        image_url = self.find_element('#landingImage').get_attribute(
-            'data-old-hires'
-        )
+        image_url = self.find_element('#landingImage').get_attribute('data-old-hires')
         if not image_url:
             image_url = self.find_element('#landingImage').get_attribute('src')
         return {
@@ -56,13 +54,9 @@ class Browser:
         self.driver.refresh()
         if not self.driver.find_elements(By.CSS_SELECTOR, '.ui-pdp-title'):
             self.driver.get(
-                self.find_element('.poly-component__title').get_attribute(
-                    'href'
-                )
+                self.find_element('.poly-component__title').get_attribute('href')
             )
-        if self.driver.find_elements(
-            By.CSS_SELECTOR, '.ui-pdp-price__original-value'
-        ):
+        if self.driver.find_elements(By.CSS_SELECTOR, '.ui-pdp-price__original-value'):
             old_value = float(
                 self.find_element('.andes-money-amount__fraction')
                 .text.replace('.', '')
@@ -73,9 +67,7 @@ class Browser:
         value = float(
             self.find_element('meta[itemprop=price]').get_attribute('content')
         )
-        if self.driver.find_elements(
-            By.CSS_SELECTOR, '.ui-pdp-price__subtitles'
-        ):
+        if self.driver.find_elements(By.CSS_SELECTOR, '.ui-pdp-price__subtitles'):
             installment = self.find_element('.ui-pdp-price__subtitles').text
             installment = installment.replace('\n', ' ').replace(' , ', ',')
         else:
@@ -93,18 +85,12 @@ class Browser:
 
     def get_magalu_product_info(self, url):
         self.driver.get(url)
-        if self.driver.find_elements(
-            By.CSS_SELECTOR, 'p[data-testid="installment"]'
-        ):
-            installment = self.find_element(
-                'p[data-testid="installment"]'
-            ).text
+        if self.driver.find_elements(By.CSS_SELECTOR, 'p[data-testid="installment"]'):
+            installment = self.find_element('p[data-testid="installment"]').text
         else:
             installment = ''
         return {
-            'name': self.find_element(
-                'h1[data-testid="heading-product-title"]'
-            ).text,
+            'name': self.find_element('h1[data-testid="heading-product-title"]').text,
             'old_value': float(
                 self.find_element('p[data-testid="price-original"]')
                 .text[3:]
@@ -132,9 +118,10 @@ class Browser:
             f.write(response.content)
         product_image = Image.open(filename)
         if product_image.height < 650:
-            product_image = product_image.resize(
-                (product_image.width * 2, product_image.height * 2)
-            )
+            product_image = product_image.resize((
+                product_image.width * 2,
+                product_image.height * 2,
+            ))
         product_image.thumbnail((900, 650), Image.Resampling.LANCZOS)
         stories_image.paste(
             product_image,
@@ -143,17 +130,11 @@ class Browser:
                 350 + (650 // 2 - product_image.height // 2),
             ),
         )
-        bold_font = ImageFont.truetype(
-            str(Path('fonts') / 'arial-bold.ttf'), 100
-        )
+        bold_font = ImageFont.truetype(str(Path('fonts') / 'arial-bold.ttf'), 100)
         font = ImageFont.truetype(str(Path('fonts') / 'arial.ttf'), 60)
         small_font = ImageFont.truetype(str(Path('fonts') / 'arial.ttf'), 50)
         draw = ImageDraw.Draw(stories_image)
-        name = (
-            info['name']
-            if len(info['name']) < 50
-            else info['name'][:40] + '...'
-        )
+        name = info['name'] if len(info['name']) < 50 else info['name'][:40] + '...'
         lines = textwrap.wrap(name, width=30)
         result_name = ''
         for line in lines:

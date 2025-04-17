@@ -33,9 +33,7 @@ def init_bot(bot, start):
             'Escolha uma opção',
             reply_markup=quick_markup(
                 {
-                    'Mercado Livre': {
-                        'callback_data': f'{action}:mercado_livre'
-                    },
+                    'Mercado Livre': {'callback_data': f'{action}:mercado_livre'},
                     'Magalu': {'callback_data': f'{action}:magalu'},
                     'Amazon': {'callback_data': f'{action}:amazon'},
                     'Voltar': {'callback_data': 'return_to_main_menu'},
@@ -59,9 +57,7 @@ def init_bot(bot, start):
         }
         image = images[website]
         if image:
-            bot.send_message(
-                callback_query.message.chat.id, 'A imagem atual é essa:'
-            )
+            bot.send_message(callback_query.message.chat.id, 'A imagem atual é essa:')
             bot.send_photo(callback_query.message.chat.id, open(image, 'rb'))
         else:
             bot.send_message(
@@ -72,11 +68,9 @@ def init_bot(bot, start):
             callback_query.message.chat.id,
             open(Path('static') / 'send_as_document.png', 'rb'),
             caption='Envie a imagem como documento para ficar como modelo',
-            reply_markup=quick_markup(
-                {
-                    'Voltar': {'callback_data': 'return_to_main_menu'},
-                }
-            ),
+            reply_markup=quick_markup({
+                'Voltar': {'callback_data': 'return_to_main_menu'},
+            }),
         )
         bot.register_next_step_handler(
             callback_query.message, lambda m: on_image(m, website)
@@ -90,18 +84,15 @@ def init_bot(bot, start):
                 bot.send_message(
                     message.chat.id,
                     'Imagem inválida, tente novamente',
-                    reply_markup=quick_markup(
-                        {'Voltar': {'callback_data': 'return_to_main_menu'}}
-                    ),
+                    reply_markup=quick_markup({
+                        'Voltar': {'callback_data': 'return_to_main_menu'}
+                    }),
                 )
-                bot.register_next_step_handler(
-                    message, lambda m: on_image(m, website)
-                )
+                bot.register_next_step_handler(message, lambda m: on_image(m, website))
                 return
             image_file = bot.download_file(image.file_path)
             image_path = str(
-                Path('static')
-                / f'{image.file_id}.{image.file_path.split(".")[-1]}'
+                Path('static') / f'{image.file_id}.{image.file_path.split(".")[-1]}'
             )
             with open(image_path, 'wb') as f:
                 f.write(image_file)
@@ -120,22 +111,24 @@ def init_bot(bot, start):
             bot.send_message(message.chat.id, 'Imagem Adicionada!')
             start(message)
         else:
-            bot.send_message(
-                message.chat.id, 'Imagem inválida, tente novamente'
-            )
-            bot.register_next_step_handler(
-                message, lambda m: on_image(m, website)
-            )
+            bot.send_message(message.chat.id, 'Imagem inválida, tente novamente')
+            bot.register_next_step_handler(message, lambda m: on_image(m, website))
 
     @bot.callback_query_handler(func=lambda c: c.data == 'text_model')
     def edit_text_model(callback_query):
         bot.send_message(
             callback_query.message.chat.id,
-            'Envie uma mensagem como no exemplo abaixo para trocar o modelo do texto, utilizando também as tags',
+            (
+                'Envie uma mensagem como no exemplo abaixo para trocar o modelo do '
+                'texto, utilizando também as tags',
+            )
         )
         bot.send_message(
             callback_query.message.chat.id,
-            '🔥{nome}\n\n{valor_antigo}\n💸{valor}\n💳 {parcelamento}\n\n👉Link p/ comprar: {link}',
+            (
+                '🔥{nome}\n\n{valor_antigo}\n💸{valor}\n💳 {parcelamento}'
+                '\n\n👉Link p/ comprar: {link}',
+            )
         )
         bot.register_next_step_handler(callback_query.message, on_text_model)
 

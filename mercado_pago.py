@@ -13,9 +13,9 @@ if __name__ == '__main__':
     with Session() as session:
         while True:
             for payment in session.scalars(select(Payment)).all():
-                response = mercado_pago_sdk.payment().get(
-                    int(payment.payment_id)
-                )['response']
+                response = mercado_pago_sdk.payment().get(int(payment.payment_id))[
+                    'response'
+                ]
                 if response['status'] == 'approved':
                     message = bot.send_message(
                         int(payment.chat_id),
@@ -29,8 +29,7 @@ if __name__ == '__main__':
                         user=payment.user,
                         payment_id=payment.payment_id,
                         plan=plan_model,
-                        due_date=get_today_date()
-                        + timedelta(days=plan_model.days),
+                        due_date=get_today_date() + timedelta(days=plan_model.days),
                     )
                     session.add(signature_model)
                     session.delete(payment)

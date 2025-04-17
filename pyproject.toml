@@ -1,0 +1,28 @@
+[project]
+name = "stories-generator"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "pytelegrambotapi>=4.26.0",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.11.5",
+    "taskipy>=1.14.1",
+]
+
+[tool.ruff.lint]
+preview = true
+select = ['I', 'F', 'E', 'W', 'PL', 'PT']
+
+[tool.ruff.format]
+preview = true
+quote-style = 'single'
+
+[tool.taskipy.tasks]
+lint = 'ruff check'
+pre_format = 'ruff check --fix'
+format = 'ruff format'

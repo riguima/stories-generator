@@ -1,4 +1,5 @@
 from datetime import timedelta
+from time import sleep
 
 from sqlalchemy import select
 
@@ -35,3 +36,4 @@ if __name__ == '__main__':
                     session.delete(payment)
                     session.commit()
                     start(message)
+            sleep(60)

@@ -11,6 +11,9 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 
+MAX_LENGTH = 50
+MINIMUM_PRODUCT_IMAGE_HEIGHT = 650
+
 
 class Browser:
     def __init__(self):
@@ -117,7 +120,7 @@ class Browser:
             response = get(info['image_url'])
             f.write(response.content)
         product_image = Image.open(filename)
-        if product_image.height < 650:
+        if product_image.height < MINIMUM_PRODUCT_IMAGE_HEIGHT:
             product_image = product_image.resize((
                 product_image.width * 2,
                 product_image.height * 2,
@@ -134,7 +137,10 @@ class Browser:
         font = ImageFont.truetype(str(Path('fonts') / 'arial.ttf'), 60)
         small_font = ImageFont.truetype(str(Path('fonts') / 'arial.ttf'), 50)
         draw = ImageDraw.Draw(stories_image)
-        name = info['name'] if len(info['name']) < 50 else info['name'][:40] + '...'
+        name = (
+            info['name'] if len(info['name']) < MAX_LENGTH
+            else info['name'][:40] + '...'
+        )
         lines = textwrap.wrap(name, width=30)
         result_name = ''
         for line in lines:

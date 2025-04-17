@@ -2,11 +2,9 @@ import os
 import re
 from datetime import datetime, timedelta
 from pathlib import Path
-from http import HTTPStatus
 
 import telebot
 import toml
-from httpx import get
 from sqlalchemy import select
 from telebot.util import quick_markup
 
@@ -50,7 +48,7 @@ def init_bot(bot, start):
 
     def on_model_url(message):
         config['MODEL_URL'] = message.text
-        toml.dump(config, open('.config.toml', 'w'))
+        toml.dump(config, open('.config.toml', 'w', encoding='utf-8'))
         bot.send_message(message.chat.id, 'Modelo Alterado!')
         start(message)
 
@@ -92,7 +90,7 @@ def init_bot(bot, start):
         website = None
         for w in websites:
             if w in browser.driver.current_url:
-                if w in ['magazineluiza', 'magazinevoce']:
+                if w in {'magazineluiza', 'magazinevoce'}:
                     website = 'magalu'
                 else:
                     website = w

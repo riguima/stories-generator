@@ -234,23 +234,26 @@ def send_message(callback_query):
 def send_message_for_all_members(callback_query):
     bot.send_message(
         callback_query.message.chat.id,
-        'Envie as mensagens que deseja enviar para todos os membros, utilize as tags: {nome}, digite /stop para parar',
+        (
+            'Envie as mensagens que deseja enviar para todos os membros, '
+            'utilize as tags: {nome}, digite /stop para parar'
+        ),
     )
     bot.register_next_step_handler(callback_query.message, on_message_for_all_members)
 
 
 def on_message_for_all_members(message):
+    query = select(TelegramUser).where(TelegramUser.chat_id != None)
     if message.text == '/stop':
         sending_message = bot.send_message(message.chat.id, 'Enviando Mensagens...')
         with Session() as session:
-            for member in session.scalars(select(TelegramUser)).all():
+            for member in session.scalars(query).all():
                 for message_for_send in messages_for_send:
                     try:
-                        if member.chat_id:
-                            bot.send_message(
-                                int(member.chat_id),
-                                message_for_send.text.format(nome=member.username),
-                            )
+                        bot.send_message(
+                            int(member.chat_id),
+                            message_for_send.text.format(nome=member.username),
+                        )
                     except ApiTelegramException:
                         continue
         bot.delete_message(message.chat.id, sending_message.id)
@@ -265,31 +268,33 @@ def on_message_for_all_members(message):
 def send_message_for_subscribers(callback_query):
     bot.send_message(
         callback_query.message.chat.id,
-        'Envie as mensagens que deseja enviar para todos os membros ativos, utilize as tags: {nome}, digite /stop para parar',
+        (
+            'Envie as mensagens que deseja enviar para todos os membros ativos, '
+            'utilize as tags: {nome}, digite /stop para parar'
+        ),
     )
     bot.register_next_step_handler(callback_query.message, on_message_for_subscribers)
 
 
 def on_message_for_subscribers(message):
+    query = (
+        select(TelegramUser)
+        .join(Signature)
+        .where(TelegramUser.chat_id != None)
+        .where(Signature.due_date >= get_today_date())
+    )
     if message.text == '/stop':
         sending_message = bot.send_message(message.chat.id, 'Enviando Mensagens...')
         with Session() as session:
-            for member in session.scalars(select(TelegramUser)).all():
-                query = (
-                    select(Signature)
-                    .where(Signature.user_id == member.id)
-                    .where(Signature.due_date >= get_today_date())
-                )
-                if session.scalars(query).all():
-                    for message_for_send in messages_for_send:
-                        try:
-                            if member.chat_id:
-                                bot.send_message(
-                                    int(member.chat_id),
-                                    message_for_send.text.format(nome=member.username),
-                                )
-                        except ApiTelegramException:
-                            continue
+            for member in session.scalars(query).all():
+                for message_for_send in messages_for_send:
+                    try:
+                        bot.send_message(
+                            int(member.chat_id),
+                            message_for_send.text.format(nome=member.username),
+                        )
+                    except ApiTelegramException:
+                        continue
         bot.delete_message(message.chat.id, sending_message.id)
         bot.send_message(message.chat.id, 'Mensagens Enviadas!')
         start(message)
@@ -315,7 +320,10 @@ def send_message_for_plan_members_action(callback_query):
     plan_id = int(callback_query.data.split(':')[-1])
     bot.send_message(
         callback_query.message.chat.id,
-        'Envie as mensagens que deseja enviar para os membros desse plano, utilize as tags: {nome}, digite /stop para parar',
+        (
+            'Envie as mensagens que deseja enviar para os membros desse plano, '
+            'utilize as tags: {nome}, digite /stop para parar'
+        )
     )
     bot.register_next_step_handler(
         callback_query.message,
@@ -324,26 +332,25 @@ def send_message_for_plan_members_action(callback_query):
 
 
 def on_message_for_plan_members(message, plan_id):
+    query = (
+        select(TelegramUser)
+        .join(Signature)
+        .where(TelegramUser.chat_id != None)
+        .where(Signature.plan_id == plan_id)
+        .where(Signature.due_date >= get_today_date())
+    )
     if message.text == '/stop':
         sending_message = bot.send_message(message.chat.id, 'Enviando Mensagens...')
         with Session() as session:
-            for member in session.scalars(select(TelegramUser)).all():
-                query = (
-                    select(Signature)
-                    .where(Signature.user_id == member.id)
-                    .where(Signature.plan_id == plan_id)
-                    .where(Signature.due_date >= get_today_date())
-                )
-                if session.scalars(query).all():
-                    for message_for_send in messages_for_send:
-                        try:
-                            if member.chat_id:
-                                bot.send_message(
-                                    int(member.chat_id),
-                                    message_for_send.text.format(nome=member.username),
-                                )
-                        except ApiTelegramException:
-                            continue
+            for member in session.scalars(query).all():
+                for message_for_send in messages_for_send:
+                    try:
+                        bot.send_message(
+                            int(member.chat_id),
+                            message_for_send.text.format(nome=member.username),
+                        )
+                    except ApiTelegramException:
+                        continue
         bot.delete_message(message.chat.id, sending_message.id)
         bot.send_message(message.chat.id, 'Mensagens Enviadas!')
         start(message)

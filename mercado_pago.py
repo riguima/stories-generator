@@ -19,7 +19,10 @@ if __name__ == '__main__':
                 if response['status'] == 'approved':
                     message = bot.send_message(
                         int(payment.chat_id),
-                        'Pagamento confirmado, confira seu acesso em "Minhas Assinaturas"',
+                        (
+                            'Pagamento confirmado, confira seu acesso em '
+                            '"Minhas Assinaturas"'
+                        ),
                     )
                     query = select(Plan).where(
                         Plan.value == response['transaction_amount']
